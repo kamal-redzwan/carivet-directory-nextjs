@@ -5,44 +5,24 @@ import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
 import SearchBar from '@/components/SearchBar';
 import ClinicCard from '@/components/ClinicCard';
+import FilterPanel from '@/components/FilterPanel';
+import { useClinicFilters } from '@/hooks/useClinicFilters';
 import { Clinic } from '@/types/clinic';
 
 export default function Home() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Use our custom filter hook
+  const { filters, updateFilters, filteredClinics, filterOptions } =
+    useClinicFilters(clinics, searchQuery);
 
   // Load clinics from Supabase
   useEffect(() => {
     loadClinics();
   }, []);
-
-  // Filter clinics based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredClinics(clinics);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = clinics.filter(
-        (clinic) =>
-          clinic.name.toLowerCase().includes(query) ||
-          clinic.city.toLowerCase().includes(query) ||
-          clinic.state.toLowerCase().includes(query) ||
-          clinic.animals_treated.some((animal) =>
-            animal.toLowerCase().includes(query)
-          ) ||
-          clinic.specializations.some((spec) =>
-            spec.toLowerCase().includes(query)
-          ) ||
-          clinic.services_offered.some((service) =>
-            service.toLowerCase().includes(query)
-          )
-      );
-      setFilteredClinics(filtered);
-    }
-  }, [searchQuery, clinics]);
 
   async function loadClinics() {
     try {
@@ -62,7 +42,6 @@ export default function Home() {
       }
 
       setClinics(data || []);
-      setFilteredClinics(data || []);
     } catch (error) {
       console.error('Error loading clinics:', error);
       setError(
@@ -100,6 +79,13 @@ export default function Home() {
     );
   }
 
+  const hasActiveFilters =
+    filters.state ||
+    filters.city ||
+    filters.emergency ||
+    filters.animalTypes.length > 0 ||
+    filters.services.length > 0;
+
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* Header */}
@@ -124,49 +110,129 @@ export default function Home() {
 
       {/* Main Content */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {/* Results Header */}
-        <div className='mb-6'>
-          <div className='flex justify-between items-center'>
-            <h2 className='text-2xl font-semibold text-gray-900'>
-              Veterinary Clinics
-            </h2>
-            <p className='text-gray-600'>
-              {filteredClinics.length} clinic
-              {filteredClinics.length !== 1 ? 's' : ''} found
-            </p>
+        <div className='flex flex-col lg:flex-row gap-8'>
+          {/* Filter Panel */}
+          <div className='lg:w-80 lg:flex-shrink-0'>
+            <FilterPanel
+              filters={filters}
+              onFilterChange={updateFilters}
+              availableStates={filterOptions.states}
+              availableCities={filterOptions.cities}
+              availableAnimalTypes={filterOptions.animalTypes}
+              availableServices={filterOptions.services}
+            />
           </div>
 
-          {searchQuery && (
-            <p className='text-gray-600 mt-2'>
-              Showing results for "{searchQuery}"
-            </p>
-          )}
-        </div>
+          {/* Results Section */}
+          <div className='flex-1'>
+            {/* Results Header */}
+            <div className='mb-6'>
+              <div className='flex justify-between items-center'>
+                <h2 className='text-2xl font-semibold text-gray-900'>
+                  Veterinary Clinics
+                </h2>
+                <div className='text-right'>
+                  <p className='text-gray-600'>
+                    {filteredClinics.length} clinic
+                    {filteredClinics.length !== 1 ? 's' : ''} found
+                  </p>
+                  {clinics.length !== filteredClinics.length && (
+                    <p className='text-sm text-gray-500'>
+                      from {clinics.length} total clinics
+                    </p>
+                  )}
+                </div>
+              </div>
 
-        {/* Results */}
-        {filteredClinics.length === 0 ? (
-          <div className='text-center py-12'>
-            <p className='text-gray-500 text-lg'>
-              {searchQuery
-                ? `No clinics found matching "${searchQuery}"`
-                : 'No clinics available'}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className='mt-4 text-blue-600 hover:text-blue-800 underline'
-              >
-                Clear search
-              </button>
+              {/* Active filters summary */}
+              {(searchQuery || hasActiveFilters) && (
+                <div className='mt-4 flex flex-wrap gap-2'>
+                  {searchQuery && (
+                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full'>
+                      Search: "{searchQuery}"
+                    </span>
+                  )}
+                  {filters.state && (
+                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full'>
+                      State: {filters.state}
+                    </span>
+                  )}
+                  {filters.city && (
+                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full'>
+                      City: {filters.city}
+                    </span>
+                  )}
+                  {filters.emergency && (
+                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full'>
+                      Emergency Services
+                    </span>
+                  )}
+                  {filters.animalTypes.map((animal) => (
+                    <span
+                      key={animal}
+                      className='inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full'
+                    >
+                      {animal}
+                    </span>
+                  ))}
+                  {filters.services.map((service) => (
+                    <span
+                      key={service}
+                      className='inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full'
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Results */}
+            {filteredClinics.length === 0 ? (
+              <div className='text-center py-12'>
+                <p className='text-gray-500 text-lg mb-4'>
+                  {searchQuery || hasActiveFilters
+                    ? 'No clinics found matching your criteria'
+                    : 'No clinics available'}
+                </p>
+                {(searchQuery || hasActiveFilters) && (
+                  <div className='space-x-4'>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className='text-blue-600 hover:text-blue-800 underline'
+                      >
+                        Clear search
+                      </button>
+                    )}
+                    {hasActiveFilters && (
+                      <button
+                        onClick={() =>
+                          updateFilters({
+                            state: '',
+                            city: '',
+                            emergency: false,
+                            animalTypes: [],
+                            services: [],
+                          })
+                        }
+                        className='text-blue-600 hover:text-blue-800 underline'
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                {filteredClinics.map((clinic) => (
+                  <ClinicCard key={clinic.id} clinic={clinic} />
+                ))}
+              </div>
             )}
           </div>
-        ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {filteredClinics.map((clinic) => (
-              <ClinicCard key={clinic.id} clinic={clinic} />
-            ))}
-          </div>
-        )}
+        </div>
       </main>
 
       {/* Footer */}
