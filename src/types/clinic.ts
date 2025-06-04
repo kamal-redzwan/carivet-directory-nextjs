@@ -1,43 +1,30 @@
 export interface Clinic {
   id: string;
   name: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    postcode: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
-  };
-  contact: {
-    phone: string;
-    email?: string;
-    website?: string;
-  };
+  street: string;
+  city: string;
+  state: string;
+  postcode: string;
+  phone: string;
+  email?: string | null;
+  website?: string | null;
   hours: {
-    monday?: string;
-    tuesday?: string;
-    wednesday?: string;
-    thursday?: string;
-    friday?: string;
-    saturday?: string;
-    sunday?: string;
-    special_notes?: string;
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
   };
-  services: {
-    emergency: boolean;
-    emergency_hours?: string;
-    emergency_details?: string;
-    animals_treated: string[];
-    specializations: string[];
-    services_offered: string[];
-  };
-  social: {
-    facebook?: string;
-    instagram?: string;
-  };
+  emergency: boolean;
+  emergency_hours?: string | null;
+  emergency_details?: string | null;
+  animals_treated: string[];
+  specializations: string[];
+  services_offered: string[];
+  facebook_url?: string | null;
+  instagram_url?: string | null;
   created_at?: string;
   updated_at?: string;
 }
