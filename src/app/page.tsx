@@ -30,6 +30,11 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [heroFilters, setHeroFilters] = useState({
+    location: '',
+    service: '',
+    animalType: '',
+  });
 
   // Use our custom filter hook
   const { filters, updateFilters, filteredClinics, filterOptions } =
@@ -94,6 +99,44 @@ export default function Home() {
       </div>
     );
   }
+
+  const handleHeroSearch = () => {
+    const searchParams = new URLSearchParams();
+
+    if (heroFilters.location) {
+      searchParams.set('state', heroFilters.location);
+    }
+
+    if (heroFilters.service) {
+      // Map service names to match our filter system
+      const serviceMap: { [key: string]: string } = {
+        Vaccination: 'vaccination',
+        Surgery: 'surgery',
+        'Dental Care': 'dental-care',
+        'Emergency Care': 'emergency-care',
+        'Pet Grooming': 'grooming',
+        'Pet Boarding': 'boarding',
+      };
+
+      if (heroFilters.service === 'Emergency Care') {
+        searchParams.set('emergency', 'true');
+      } else {
+        const mappedService =
+          serviceMap[heroFilters.service] ||
+          heroFilters.service.toLowerCase().replace(' ', '-');
+        searchParams.set('service', mappedService);
+      }
+    }
+
+    if (heroFilters.animalType) {
+      searchParams.set('animal', heroFilters.animalType.toLowerCase());
+    }
+
+    // Navigate to clinics page with filters
+    const queryString = searchParams.toString();
+    const url = queryString ? `/clinics?${queryString}` : '/clinics';
+    window.location.href = url;
+  };
 
   // Get featured clinics (first 3 for display)
   const featuredClinics = clinics.slice(0, 3);
@@ -168,8 +211,14 @@ export default function Home() {
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Location
                 </label>
-                <select className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'>
-                  <option>All Locations</option>
+                <select
+                  value={heroFilters.location}
+                  onChange={(e) =>
+                    setHeroFilters({ ...heroFilters, location: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'
+                >
+                  <option value=''>All Locations</option>
                   {filterOptions.states.map((state) => (
                     <option key={state} value={state}>
                       {state}
@@ -181,31 +230,51 @@ export default function Home() {
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Service
                 </label>
-                <select className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'>
-                  <option>All Services</option>
-                  {filterOptions.services.map((service) => (
-                    <option key={service} value={service}>
-                      {service}
-                    </option>
-                  ))}
+                <select
+                  value={heroFilters.service}
+                  onChange={(e) =>
+                    setHeroFilters({ ...heroFilters, service: e.target.value })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'
+                >
+                  <option value=''>All Services</option>
+                  <option value='Vaccination'>Vaccination</option>
+                  <option value='Surgery'>Surgery</option>
+                  <option value='Dental Care'>Dental Care</option>
+                  <option value='Emergency Care'>Emergency Care</option>
+                  <option value='Pet Grooming'>Pet Grooming</option>
+                  <option value='Pet Boarding'>Pet Boarding</option>
                 </select>
               </div>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Animal Type
                 </label>
-                <select className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'>
-                  <option>All Animals</option>
-                  {filterOptions.animalTypes.map((animal) => (
-                    <option key={animal} value={animal}>
-                      {animal}
-                    </option>
-                  ))}
+                <select
+                  value={heroFilters.animalType}
+                  onChange={(e) =>
+                    setHeroFilters({
+                      ...heroFilters,
+                      animalType: e.target.value,
+                    })
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'
+                >
+                  <option value=''>All Animals</option>
+                  <option value='Dogs'>Dogs</option>
+                  <option value='Cats'>Cats</option>
+                  <option value='Birds'>Birds</option>
+                  <option value='Rabbits'>Rabbits</option>
+                  <option value='Small Mammals'>Small Mammals</option>
+                  <option value='Exotic Pets'>Exotic Pets</option>
                 </select>
               </div>
             </div>
             <div className='text-center'>
-              <button className='bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 font-medium'>
+              <button
+                onClick={handleHeroSearch}
+                className='bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 font-medium'
+              >
                 Find Veterinary Clinics
               </button>
             </div>
@@ -288,10 +357,13 @@ export default function Home() {
           </div>
 
           <div className='text-center mt-8'>
-            <button className='inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium'>
+            <Link
+              href='/clinics'
+              className='inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium'
+            >
               View All Clinics
               <ChevronRight size={16} className='ml-1' />
-            </button>
+            </Link>
           </div>
         </div>
       </section>

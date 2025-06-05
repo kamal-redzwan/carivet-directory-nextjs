@@ -29,9 +29,13 @@ export default function ClinicsPage() {
   useEffect(() => {
     const emergency = searchParams.get('emergency');
     const service = searchParams.get('service');
+    const state = searchParams.get('state');
+    const animal = searchParams.get('animal');
+
+    let newFilters = { ...filters };
 
     if (emergency === 'true') {
-      updateFilters({ ...filters, emergency: true });
+      newFilters.emergency = true;
     }
 
     if (service) {
@@ -41,15 +45,36 @@ export default function ClinicsPage() {
         'dental-care': 'Dentistry',
         vaccination: 'Vaccination',
         'emergency-care': 'Emergency Services',
-        'exotic-pet-care': 'Exotic Pet Care',
         grooming: 'Pet Grooming',
+        boarding: 'Pet Boarding',
       };
 
       const mappedService = serviceMap[service] || service;
-      updateFilters({
-        ...filters,
-        services: [mappedService],
-      });
+      newFilters.services = [mappedService];
+    }
+
+    if (state) {
+      newFilters.state = state;
+    }
+
+    if (animal) {
+      const animalMap: { [key: string]: string } = {
+        dogs: 'dogs',
+        cats: 'cats',
+        birds: 'birds',
+        rabbits: 'rabbits',
+        'small mammals': 'small mammals',
+        'exotic pets': 'exotic pets',
+      };
+
+      const mappedAnimal =
+        animalMap[animal.toLowerCase()] || animal.toLowerCase();
+      newFilters.animalTypes = [mappedAnimal];
+    }
+
+    // Only update if there are actual changes
+    if (JSON.stringify(newFilters) !== JSON.stringify(filters)) {
+      updateFilters(newFilters);
     }
   }, [searchParams]);
 
@@ -221,11 +246,22 @@ export default function ClinicsPage() {
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
-                      checked={filters.services.includes('Vaccination')}
+                      checked={
+                        filters.services.includes('Vaccination') ||
+                        filters.services.includes('vaccination')
+                      }
                       onChange={(e) => {
                         const services = e.target.checked
-                          ? [...filters.services, 'Vaccination']
-                          : filters.services.filter((s) => s !== 'Vaccination');
+                          ? [
+                              ...filters.services.filter(
+                                (s) =>
+                                  s !== 'Vaccination' && s !== 'vaccination'
+                              ),
+                              'Vaccination',
+                            ]
+                          : filters.services.filter(
+                              (s) => s !== 'Vaccination' && s !== 'vaccination'
+                            );
                         updateFilters({ ...filters, services });
                       }}
                       className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
@@ -237,11 +273,21 @@ export default function ClinicsPage() {
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
-                      checked={filters.services.includes('Surgery')}
+                      checked={
+                        filters.services.includes('Surgery') ||
+                        filters.services.includes('surgery')
+                      }
                       onChange={(e) => {
                         const services = e.target.checked
-                          ? [...filters.services, 'Surgery']
-                          : filters.services.filter((s) => s !== 'Surgery');
+                          ? [
+                              ...filters.services.filter(
+                                (s) => s !== 'Surgery' && s !== 'surgery'
+                              ),
+                              'Surgery',
+                            ]
+                          : filters.services.filter(
+                              (s) => s !== 'Surgery' && s !== 'surgery'
+                            );
                         updateFilters({ ...filters, services });
                       }}
                       className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
@@ -251,11 +297,28 @@ export default function ClinicsPage() {
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
-                      checked={filters.services.includes('Dentistry')}
+                      checked={
+                        filters.services.includes('Dentistry') ||
+                        filters.services.includes('Dental Care') ||
+                        filters.services.includes('dental care')
+                      }
                       onChange={(e) => {
                         const services = e.target.checked
-                          ? [...filters.services, 'Dentistry']
-                          : filters.services.filter((s) => s !== 'Dentistry');
+                          ? [
+                              ...filters.services.filter(
+                                (s) =>
+                                  s !== 'Dentistry' &&
+                                  s !== 'Dental Care' &&
+                                  s !== 'dental care'
+                              ),
+                              'Dental Care',
+                            ]
+                          : filters.services.filter(
+                              (s) =>
+                                s !== 'Dentistry' &&
+                                s !== 'Dental Care' &&
+                                s !== 'dental care'
+                            );
                         updateFilters({ ...filters, services });
                       }}
                       className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
@@ -267,12 +330,27 @@ export default function ClinicsPage() {
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
-                      checked={filters.services.includes('Pet Grooming')}
+                      checked={
+                        filters.services.includes('Pet Grooming') ||
+                        filters.services.includes('Grooming') ||
+                        filters.services.includes('grooming')
+                      }
                       onChange={(e) => {
                         const services = e.target.checked
-                          ? [...filters.services, 'Pet Grooming']
+                          ? [
+                              ...filters.services.filter(
+                                (s) =>
+                                  s !== 'Pet Grooming' &&
+                                  s !== 'Grooming' &&
+                                  s !== 'grooming'
+                              ),
+                              'Pet Grooming',
+                            ]
                           : filters.services.filter(
-                              (s) => s !== 'Pet Grooming'
+                              (s) =>
+                                s !== 'Pet Grooming' &&
+                                s !== 'Grooming' &&
+                                s !== 'grooming'
                             );
                         updateFilters({ ...filters, services });
                       }}
@@ -283,12 +361,27 @@ export default function ClinicsPage() {
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
-                      checked={filters.services.includes('Pet Boarding')}
+                      checked={
+                        filters.services.includes('Pet Boarding') ||
+                        filters.services.includes('Boarding') ||
+                        filters.services.includes('boarding')
+                      }
                       onChange={(e) => {
                         const services = e.target.checked
-                          ? [...filters.services, 'Pet Boarding']
+                          ? [
+                              ...filters.services.filter(
+                                (s) =>
+                                  s !== 'Pet Boarding' &&
+                                  s !== 'Boarding' &&
+                                  s !== 'boarding'
+                              ),
+                              'Pet Boarding',
+                            ]
                           : filters.services.filter(
-                              (s) => s !== 'Pet Boarding'
+                              (s) =>
+                                s !== 'Pet Boarding' &&
+                                s !== 'Boarding' &&
+                                s !== 'boarding'
                             );
                         updateFilters({ ...filters, services });
                       }}
@@ -401,10 +494,55 @@ export default function ClinicsPage() {
 
           {/* Results Section */}
           <div className='flex-1'>
+            {/* Active Filters Display */}
+            {(filters.state ||
+              filters.emergency ||
+              filters.services.length > 0 ||
+              filters.animalTypes.length > 0) && (
+              <div className='mb-6 p-4 bg-gray-50 rounded-lg'>
+                <h3 className='text-sm font-medium text-gray-900 mb-2'>
+                  Active Filters:
+                </h3>
+                <div className='flex flex-wrap gap-2'>
+                  {filters.state && (
+                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full'>
+                      State: {filters.state}
+                    </span>
+                  )}
+                  {filters.emergency && (
+                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full'>
+                      Emergency Services
+                    </span>
+                  )}
+                  {filters.services.map((service) => (
+                    <span
+                      key={service}
+                      className='inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full'
+                    >
+                      Service: {service}
+                    </span>
+                  ))}
+                  {filters.animalTypes.map((animal) => (
+                    <span
+                      key={animal}
+                      className='inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full'
+                    >
+                      Animal: {animal}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Results Header */}
             <div className='flex justify-between items-center mb-6'>
               <h2 className='text-xl font-semibold text-gray-900'>
                 {sortedClinics.length} Clinics Found
+                {filters.state && (
+                  <span className='text-sm font-normal text-gray-600 ml-2'>
+                    in {filters.state}
+                  </span>
+                )}
               </h2>
               <div className='flex items-center gap-2'>
                 <span className='text-sm text-gray-600'>Sort by:</span>
@@ -462,18 +600,53 @@ export default function ClinicsPage() {
 
                     {/* Service Tags */}
                     <div className='flex flex-wrap gap-1 mb-3'>
+                      {/* Show Vaccination if it's a common service */}
                       <span className='bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded'>
                         Vaccination
                       </span>
-                      <span className='bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded'>
-                        Surgery
-                      </span>
-                      <span className='bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded'>
-                        Dental Care
-                      </span>
-                      {clinic.services_offered.length > 3 && (
+                      {/* Show Surgery if available in services or specializations */}
+                      {(clinic.services_offered?.some((s) =>
+                        s.toLowerCase().includes('surgery')
+                      ) ||
+                        clinic.specializations?.some((s) =>
+                          s.toLowerCase().includes('surgery')
+                        ) ||
+                        clinic.specializations?.some((s) =>
+                          s.toLowerCase().includes('orthopedic')
+                        )) && (
+                        <span className='bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded'>
+                          Surgery
+                        </span>
+                      )}
+                      {/* Show Dental Care if available */}
+                      {(clinic.services_offered?.some((s) =>
+                        s.toLowerCase().includes('dental')
+                      ) ||
+                        clinic.specializations?.some((s) =>
+                          s.toLowerCase().includes('dentistry')
+                        )) && (
+                        <span className='bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded'>
+                          Dental Care
+                        </span>
+                      )}
+                      {/* Show Grooming if available */}
+                      {clinic.services_offered?.some((s) =>
+                        s.toLowerCase().includes('grooming')
+                      ) && (
+                        <span className='bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded'>
+                          Grooming
+                        </span>
+                      )}
+                      {/* Show more indicator if there are additional services */}
+                      {(clinic.services_offered?.length || 0) +
+                        (clinic.specializations?.length || 0) >
+                        4 && (
                         <span className='text-xs text-gray-500'>
-                          +{clinic.services_offered.length - 3} more
+                          +
+                          {(clinic.services_offered?.length || 0) +
+                            (clinic.specializations?.length || 0) -
+                            4}{' '}
+                          more
                         </span>
                       )}
                     </div>

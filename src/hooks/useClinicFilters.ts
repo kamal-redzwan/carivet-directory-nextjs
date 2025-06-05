@@ -103,13 +103,29 @@ export function useClinicFilters(clinics: Clinic[], searchQuery: string) {
 
     // Apply services filter
     if (filters.services.length > 0) {
-      filtered = filtered.filter((clinic) =>
-        filters.services.some(
-          (service) =>
-            (clinic.services_offered || []).includes(service) ||
-            (clinic.specializations || []).includes(service)
-        )
-      );
+      filtered = filtered.filter((clinic) => {
+        return filters.services.some((service) => {
+          // Handle Vaccination specially - assume all clinics offer vaccination
+          if (service === 'Vaccination' || service === 'vaccination') {
+            return true; // All veterinary clinics offer vaccination
+          }
+
+          // Check if service matches in services_offered or specializations
+          const serviceInOffered = (clinic.services_offered || []).some(
+            (s) =>
+              s.toLowerCase().includes(service.toLowerCase()) ||
+              service.toLowerCase().includes(s.toLowerCase())
+          );
+
+          const serviceInSpecializations = (clinic.specializations || []).some(
+            (s) =>
+              s.toLowerCase().includes(service.toLowerCase()) ||
+              service.toLowerCase().includes(s.toLowerCase())
+          );
+
+          return serviceInOffered || serviceInSpecializations;
+        });
+      });
     }
 
     return filtered;
