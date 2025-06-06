@@ -239,26 +239,6 @@ export default function BlogPostPage() {
             )}
           </div>
 
-          {/* Author Section */}
-          <div className='border-t border-gray-200 pt-8 mb-8'>
-            <div className='flex items-start gap-4'>
-              <div className='w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0'>
-                <PawPrint className='h-8 w-8 text-emerald-600' />
-              </div>
-              <div>
-                <h4 className='font-semibold text-gray-900 mb-2'>
-                  About the Author
-                </h4>
-                <p className='text-sm text-gray-600'>
-                  The CariVet Editorial Team consists of licensed veterinarians
-                  and pet care experts dedicated to providing accurate,
-                  up-to-date information to help Malaysian pet owners make
-                  informed decisions about their pets' health and wellbeing.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Call to Action */}
           <div className='bg-emerald-50 p-6 rounded-lg mb-8 text-center'>
             <h3 className='text-xl font-semibold text-gray-900 mb-2'>
@@ -282,6 +262,7 @@ export default function BlogPostPage() {
       <footer className='bg-emerald-600 text-white py-12 mt-16'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
+            {/* CariVet Info */}
             <div>
               <div className='flex items-center mb-4'>
                 <PawPrint className='h-6 w-6 mr-2' />
@@ -297,7 +278,96 @@ export default function BlogPostPage() {
                 <Instagram className='h-5 w-5 text-emerald-200 hover:text-white cursor-pointer' />
               </div>
             </div>
-            {/* Add other footer sections as needed */}
+
+            {/* Quick Links */}
+            <div>
+              <h4 className='text-lg font-semibold mb-4'>Quick Links</h4>
+              <ul className='space-y-2 text-emerald-100'>
+                <li>
+                  <Link href='/' className='hover:text-white'>
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/clinics' className='hover:text-white'>
+                    Find Clinics
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/tips' className='hover:text-white'>
+                    Pet Care Tips
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/blog' className='hover:text-white'>
+                    Veterinary Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/about' className='hover:text-white'>
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/contact' className='hover:text-white'>
+                    Contact Us
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className='text-lg font-semibold mb-4'>Resources</h4>
+              <ul className='space-y-2 text-emerald-100'>
+                <li>
+                  <Link href='/tips' className='hover:text-white'>
+                    Pet Care Tips
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/blog' className='hover:text-white'>
+                    Veterinary Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/emergency' className='hover:text-white'>
+                    Emergency Services
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/add-clinic' className='hover:text-white'>
+                    Add Your Clinic
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className='text-lg font-semibold mb-4'>Legal</h4>
+              <ul className='space-y-2 text-emerald-100'>
+                <li>
+                  <Link href='/privacy' className='hover:text-white'>
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/terms' className='hover:text-white'>
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href='/cookies' className='hover:text-white'>
+                    Cookie Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className='border-t border-emerald-500 mt-8 pt-8 text-center text-emerald-100'>
+            <p>&copy; 2025 CariVet Malaysia. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,20 +1,32 @@
-import { NextResponse } from 'next/server';
-import { getAllPosts, getFeaturedPosts, getLatestPosts } from '@/lib/blog';
+import { NextRequest, NextResponse } from 'next/server';
+import { getPostBySlug } from '@/lib/blog';
 
-export async function GET() {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
   try {
-    const allPosts = getAllPosts();
-    const featuredPosts = getFeaturedPosts();
-    const latestPosts = getLatestPosts();
+    console.log('API: Looking for post with slug:', params.slug);
 
-    return NextResponse.json({
-      allPosts,
-      featuredPosts,
-      latestPosts,
-    });
+    const post = getPostBySlug(params.slug);
+
+    if (!post) {
+      console.log('API: Post not found for slug:', params.slug);
+      return NextResponse.json(
+        { error: 'Post not found', slug: params.slug },
+        { status: 404 }
+      );
+    }
+
+    console.log('API: Found post:', post.title);
+    return NextResponse.json(post);
   } catch (error) {
+    console.error('API: Error loading post:', error);
     return NextResponse.json(
-      { error: 'Failed to load blog posts' },
+      {
+        error: 'Failed to load post',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
