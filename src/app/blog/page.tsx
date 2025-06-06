@@ -13,8 +13,6 @@ import { useState, useEffect } from 'react';
 import { BlogPost } from '@/lib/blog';
 
 export default function VeterinaryBlogPage() {
-  const [email, setEmail] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
   const [latestPosts, setLatestPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,12 +33,6 @@ export default function VeterinaryBlogPage() {
 
     loadBlogPosts();
   }, []);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Subscribe email:', email);
-    setEmail('');
-  };
 
   // Fallback data for when MDX posts aren't loaded yet
   const fallbackFeaturedArticles = [
@@ -320,8 +312,8 @@ export default function VeterinaryBlogPage() {
                 ))}
               </div>
 
-              {/* Pagination */}
-              <div className='flex justify-center items-center gap-2'>
+              {/* Pagination - Hidden for now, will add when there are more blog posts */}
+              {/* <div className='flex justify-center items-center gap-2'>
                 <button className='p-2 text-gray-400 hover:text-gray-600'>
                   <ChevronLeft size={16} />
                   <span className='sr-only'>Previous</span>
@@ -349,7 +341,7 @@ export default function VeterinaryBlogPage() {
                   <ChevronRight size={16} />
                   <span className='sr-only'>Next</span>
                 </button>
-              </div>
+              </div> */}
             </section>
           </div>
 
@@ -374,33 +366,6 @@ export default function VeterinaryBlogPage() {
                   </li>
                 ))}
               </ul>
-            </div>
-
-            {/* Newsletter Subscription */}
-            <div className='bg-white border border-gray-200 rounded-lg p-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Subscribe to Our Newsletter
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Stay updated with the latest articles, tips, and advice for your
-                pets.
-              </p>
-              <form onSubmit={handleSubscribe} className='space-y-3'>
-                <input
-                  type='email'
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder='Your email address'
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                  required
-                />
-                <button
-                  type='submit'
-                  className='w-full bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 transition-colors text-sm font-medium'
-                >
-                  Subscribe
-                </button>
-              </form>
             </div>
           </div>
         </div>
