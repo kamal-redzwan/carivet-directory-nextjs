@@ -3,9 +3,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
-import SearchBar from '@/components/SearchBar';
-import ClinicCard from '@/components/ClinicCard';
-import FilterPanel from '@/components/FilterPanel';
 import { useClinicFilters } from '@/hooks/useClinicFilters';
 import { Clinic } from '@/types/clinic';
 import {

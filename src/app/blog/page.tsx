@@ -9,87 +9,108 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BlogPost } from '@/lib/blog';
 
 export default function VeterinaryBlogPage() {
   const [email, setEmail] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
+  const [latestPosts, setLatestPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadBlogPosts() {
+      try {
+        const response = await fetch('/api/blog');
+        const data = await response.json();
+        setFeaturedPosts(data.featuredPosts || []);
+        setLatestPosts(data.latestPosts || []);
+      } catch (error) {
+        console.error('Failed to load blog posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadBlogPosts();
+  }, []);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle newsletter subscription
     console.log('Subscribe email:', email);
     setEmail('');
   };
 
-  const featuredArticles = [
+  // Fallback data for when MDX posts aren't loaded yet
+  const fallbackFeaturedArticles = [
     {
-      id: 1,
+      slug: 'understanding-vaccinations',
       title: 'Understanding Vaccinations: A Guide for Pet Owners',
       excerpt:
         "Learn about essential vaccinations for dogs and cats, when they should be administered, and why they're crucial for your pet's health.",
       category: 'Preventive Care',
       categoryColor: 'bg-emerald-100 text-emerald-800',
       date: 'May 15, 2023',
-      author: 'Dr. Sarah Chen',
+      author: 'CariVet Editorial Team',
       readTime: '5 min read',
     },
     {
-      id: 2,
+      slug: 'dental-health-pets',
       title: 'Dental Health in Pets: More Important Than You Think',
       excerpt:
         "Discover why dental care is vital for your pet's overall health and learn practical tips for maintaining good oral hygiene at home.",
       category: 'Wellness',
       categoryColor: 'bg-blue-100 text-blue-800',
       date: 'April 28, 2023',
-      author: 'Dr. Michael Wong',
+      author: 'CariVet Editorial Team',
       readTime: '4 min read',
     },
   ];
 
-  const latestArticles = [
+  const fallbackLatestArticles = [
     {
-      id: 3,
+      slug: 'cat-pain-signs',
       title: 'Recognizing Signs of Pain in Cats: What to Look For',
       excerpt:
         'Cats are masters at hiding pain. Learn the subtle signs that might indicate your feline friend is suffering and when to seek veterinary care.',
       category: 'Feline Health',
       categoryColor: 'bg-purple-100 text-purple-800',
       date: 'April 10, 2023',
-      author: 'Dr. Lisa Abdullah',
+      author: 'CariVet Editorial Team',
       readTime: '6 min read',
     },
     {
-      id: 4,
+      slug: 'senior-dog-nutrition',
       title: 'Nutrition for Senior Dogs: Adapting to Changing Needs',
       excerpt:
         "As dogs age, their nutritional requirements change. Find out how to adjust your senior dog's diet to support their health in their golden years.",
       category: 'Nutrition',
       categoryColor: 'bg-orange-100 text-orange-800',
       date: 'March 22, 2023',
-      author: 'Dr. James Tan',
+      author: 'CariVet Editorial Team',
       readTime: '7 min read',
     },
     {
-      id: 5,
+      slug: 'parasite-prevention',
       title: 'Parasite Prevention: Protecting Your Pet Year-Round',
       excerpt:
         'Learn about common parasites that can affect your pets, their potential health impacts, and effective prevention strategies for all seasons.',
       category: 'Preventive Care',
       categoryColor: 'bg-emerald-100 text-emerald-800',
       date: 'March 8, 2023',
-      author: 'Dr. Alina Rahman',
+      author: 'CariVet Editorial Team',
       readTime: '5 min read',
     },
     {
-      id: 6,
+      slug: 'pet-anxiety-management',
       title: 'Managing Anxiety in Pets: From Thunderstorms to Separation',
       excerpt:
         'Discover effective strategies to help pets cope with various forms of anxiety, including natural remedies and when to consider professional help.',
       category: 'Behavior',
       categoryColor: 'bg-pink-100 text-pink-800',
       date: 'February 18, 2023',
-      author: 'Dr. David Lim',
+      author: 'CariVet Editorial Team',
       readTime: '8 min read',
     },
   ];
@@ -101,6 +122,23 @@ export default function VeterinaryBlogPage() {
     'Nutrition',
     'Behavior',
   ];
+
+  // Use MDX posts if available, otherwise use fallback data
+  const displayFeaturedPosts =
+    featuredPosts.length > 0 ? featuredPosts : fallbackFeaturedArticles;
+  const displayLatestPosts =
+    latestPosts.length > 0 ? latestPosts : fallbackLatestArticles;
+
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4'></div>
+          <p className='text-gray-600'>Loading blog posts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-white'>
@@ -175,9 +213,9 @@ export default function VeterinaryBlogPage() {
                 Featured Articles
               </h2>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                {featuredArticles.map((article) => (
+                {displayFeaturedPosts.map((article) => (
                   <article
-                    key={article.id}
+                    key={article.slug}
                     className='bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow'
                   >
                     {/* Placeholder Image */}
@@ -214,7 +252,7 @@ export default function VeterinaryBlogPage() {
                       </div>
 
                       <Link
-                        href={`/blog/${article.id}`}
+                        href={`/blog/${article.slug}`}
                         className='inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium text-sm'
                       >
                         Read more
@@ -232,9 +270,9 @@ export default function VeterinaryBlogPage() {
                 Latest Articles
               </h2>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
-                {latestArticles.map((article) => (
+                {displayLatestPosts.map((article) => (
                   <article
-                    key={article.id}
+                    key={article.slug}
                     className='bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow'
                   >
                     {/* Placeholder Image */}
@@ -271,7 +309,7 @@ export default function VeterinaryBlogPage() {
                       </div>
 
                       <Link
-                        href={`/blog/${article.id}`}
+                        href={`/blog/${article.slug}`}
                         className='inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium text-sm'
                       >
                         Read more
