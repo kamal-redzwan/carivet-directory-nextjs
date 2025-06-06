@@ -341,8 +341,8 @@ export default function ContactUsPage() {
               </div>
             </div>
 
-            {/* Connect With Us */}
-            <div className='bg-emerald-50 rounded-lg p-6'>
+            {/* Connect With Us - HIDDEN */}
+            {/* <div className='bg-emerald-50 rounded-lg p-6'>
               <h3 className='text-lg font-semibold text-gray-900 mb-3'>
                 Connect With Us
               </h3>
@@ -379,12 +379,12 @@ export default function ContactUsPage() {
                   <Linkedin size={20} />
                 </a>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
-        {/* Find Us - Map Section */}
-        <section className='mt-16'>
+        {/* Find Us - Map Section - HIDDEN */}
+        {/* <section className='mt-16'>
           <h2 className='text-2xl font-bold text-gray-900 mb-6'>Find Us</h2>
           <div className='w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center'>
             <div className='text-center text-gray-500'>
@@ -392,7 +392,7 @@ export default function ContactUsPage() {
               <p>Map Placeholder - Replace with actual map embed</p>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
 
       {/* Footer */}
