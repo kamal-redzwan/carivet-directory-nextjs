@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
 import { useClinicFilters } from '@/hooks/useClinicFilters';
@@ -36,12 +36,7 @@ export default function Home() {
   // Use our custom filter hook
   const { filterOptions } = useClinicFilters(clinics, '');
 
-  // Load clinics from Supabase
-  useEffect(() => {
-    loadClinics();
-  }, []);
-
-  async function loadClinics() {
+  const loadClinics = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -67,7 +62,12 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []); // Empty dependency array since it doesn't depend on any props or state
+
+  // Load clinics from Supabase
+  useEffect(() => {
+    loadClinics();
+  }, [loadClinics]);
 
   if (loading) {
     return (

@@ -77,7 +77,7 @@ export default function ClinicsPage() {
     if (JSON.stringify(newFilters) !== JSON.stringify(filters)) {
       updateFilters(newFilters);
     }
-  }, [searchParams]);
+  }, [searchParams, filters, updateFilters]);
 
   async function loadClinics() {
     try {
