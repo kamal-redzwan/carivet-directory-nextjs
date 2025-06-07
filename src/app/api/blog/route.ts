@@ -1,38 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getPostBySlug } from '@/lib/blog';
+import { NextResponse } from 'next/server';
+import { getAllPosts } from '@/lib/blog';
 
 // This is a catch-all route handler
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string[] } }
-) {
+export async function GET() {
   try {
-    // Get the slug from the params array
-    const slug = params.slug?.[0];
+    const posts = getAllPosts();
 
-    if (!slug) {
-      return NextResponse.json({ error: 'Slug is required' }, { status: 400 });
-    }
+    // Split posts into featured and latest
+    const featuredPosts = posts.slice(0, 2);
+    const latestPosts = posts.slice(2, 6);
 
-    console.log('API: Looking for post with slug:', slug);
-
-    const post = getPostBySlug(slug);
-
-    if (!post) {
-      console.log('API: Post not found for slug:', slug);
-      return NextResponse.json(
-        { error: 'Post not found', slug },
-        { status: 404 }
-      );
-    }
-
-    console.log('API: Found post:', post.title);
-    return NextResponse.json(post);
+    return NextResponse.json({
+      featuredPosts,
+      latestPosts,
+    });
   } catch (error) {
-    console.error('API: Error loading post:', error);
     return NextResponse.json(
       {
-        error: 'Failed to load post',
+        error: 'Failed to load blog posts',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
