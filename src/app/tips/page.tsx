@@ -1,5 +1,6 @@
 'use client';
 
+import { Navbar } from '@/components/layout/Navbar';
 import {
   PawPrint,
   Facebook,
@@ -20,54 +21,7 @@ export default function PetCareTipsPage() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            {/* Logo */}
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-
-            {/* Navigation */}
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-900 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
@@ -150,7 +104,7 @@ export default function PetCareTipsPage() {
                   className='text-emerald-600 mt-0.5 flex-shrink-0'
                 />
                 <span className='text-sm'>
-                  Monitor your pet's weight and adjust portions accordingly
+                  Monitor your pet&apos;s weight and adjust portions accordingly
                 </span>
               </li>
             </ul>
@@ -171,8 +125,8 @@ export default function PetCareTipsPage() {
                   className='text-emerald-600 mt-0.5 flex-shrink-0'
                 />
                 <span className='text-sm'>
-                  Provide daily exercise appropriate for your pet's age, breed,
-                  and health status
+                  Provide daily exercise appropriate for your pet&apos;s age,
+                  breed, and health status
                 </span>
               </li>
               <li className='flex items-start gap-2'>
@@ -250,7 +204,7 @@ export default function PetCareTipsPage() {
                   className='text-emerald-600 mt-0.5 flex-shrink-0'
                 />
                 <span className='text-sm'>
-                  Clean your pet's teeth regularly with pet-safe toothpaste
+                  Clean your pet&apos;s teeth regularly with pet-safe toothpaste
                 </span>
               </li>
               <li className='flex items-start gap-2'>
@@ -298,7 +252,7 @@ export default function PetCareTipsPage() {
                   className='text-emerald-600 mt-0.5 flex-shrink-0'
                 />
                 <span className='text-sm'>
-                  Keep vaccinations up to date according to your vet's
+                  Keep vaccinations up to date according to your vet&apos;s
                   recommendations
                 </span>
               </li>
@@ -462,8 +416,8 @@ export default function PetCareTipsPage() {
           </h3>
           <p className='text-gray-600 mb-6 max-w-2xl mx-auto'>
             These tips provide general guidance, but every pet is unique. For
-            personalized advice tailored to your pet's specific needs, consult
-            with a veterinarian.
+            personalized advice tailored to your pet&apos;s specific needs,
+            consult with a veterinarian.
           </p>
           <Link
             href='/clinics'

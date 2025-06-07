@@ -1,8 +1,12 @@
 import React from 'react';
 import { Check, AlertTriangle, Info, Lightbulb } from 'lucide-react';
 
+interface MDXComponentProps extends React.HTMLAttributes<HTMLElement> {
+  children: React.ReactNode;
+}
+
 export const MDXComponents = {
-  h1: ({ children, ...props }: any) => (
+  h1: ({ children, ...props }: MDXComponentProps) => (
     <h1
       className='text-4xl font-bold text-gray-900 mb-6 leading-tight'
       {...props}
@@ -10,32 +14,32 @@ export const MDXComponents = {
       {children}
     </h1>
   ),
-  h2: ({ children, ...props }: any) => (
+  h2: ({ children, ...props }: MDXComponentProps) => (
     <h2 className='text-2xl font-bold text-gray-900 mt-8 mb-4' {...props}>
       {children}
     </h2>
   ),
-  h3: ({ children, ...props }: any) => (
+  h3: ({ children, ...props }: MDXComponentProps) => (
     <h3 className='text-xl font-semibold text-gray-900 mt-6 mb-3' {...props}>
       {children}
     </h3>
   ),
-  p: ({ children, ...props }: any) => (
+  p: ({ children, ...props }: MDXComponentProps) => (
     <p className='mb-6 leading-relaxed text-gray-700' {...props}>
       {children}
     </p>
   ),
-  ul: ({ children, ...props }: any) => (
+  ul: ({ children, ...props }: MDXComponentProps) => (
     <ul className='space-y-2 mb-6 ml-6' {...props}>
       {children}
     </ul>
   ),
-  li: ({ children, ...props }: any) => (
+  li: ({ children, ...props }: MDXComponentProps) => (
     <li className='list-disc' {...props}>
       {children}
     </li>
   ),
-  strong: ({ children, ...props }: any) => (
+  strong: ({ children, ...props }: MDXComponentProps) => (
     <strong className='font-semibold text-gray-900' {...props}>
       {children}
     </strong>
@@ -91,7 +95,9 @@ export const MDXComponents = {
 
   MythBuster: ({ myth, truth }: { myth: string; truth: string }) => (
     <div className='border-l-4 border-red-500 pl-4 mb-4'>
-      <h4 className='font-semibold text-gray-900 mb-2'>Myth: "{myth}"</h4>
+      <h4 className='font-semibold text-gray-900 mb-2'>
+        Myth: &quot;{myth}&quot;
+      </h4>
       <p className='text-sm'>
         <strong className='text-emerald-600'>Truth:</strong> {truth}
       </p>

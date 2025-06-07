@@ -5,12 +5,12 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { BlogPost } from '@/lib/blog';
+import { Navbar } from '@/components/layout/Navbar';
 
 export default function VeterinaryBlogPage() {
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
@@ -40,7 +40,7 @@ export default function VeterinaryBlogPage() {
       slug: 'understanding-vaccinations',
       title: 'Understanding Vaccinations: A Guide for Pet Owners',
       excerpt:
-        "Learn about essential vaccinations for dogs and cats, when they should be administered, and why they're crucial for your pet's health.",
+        'Learn about essential vaccinations for dogs and cats, when they should be administered, and why they&apos;re crucial for your pet&apos;s health.',
       category: 'Preventive Care',
       categoryColor: 'bg-emerald-100 text-emerald-800',
       date: 'May 15, 2023',
@@ -51,7 +51,7 @@ export default function VeterinaryBlogPage() {
       slug: 'dental-health-pets',
       title: 'Dental Health in Pets: More Important Than You Think',
       excerpt:
-        "Discover why dental care is vital for your pet's overall health and learn practical tips for maintaining good oral hygiene at home.",
+        'Discover why dental care is vital for your pet&apos;s overall health and learn practical tips for maintaining good oral hygiene at home.',
       category: 'Wellness',
       categoryColor: 'bg-blue-100 text-blue-800',
       date: 'April 28, 2023',
@@ -76,7 +76,7 @@ export default function VeterinaryBlogPage() {
       slug: 'senior-dog-nutrition',
       title: 'Nutrition for Senior Dogs: Adapting to Changing Needs',
       excerpt:
-        "As dogs age, their nutritional requirements change. Find out how to adjust your senior dog's diet to support their health in their golden years.",
+        'As dogs age, their nutritional requirements change. Find out how to adjust your senior dog&apos;s diet to support their health in their golden years.',
       category: 'Nutrition',
       categoryColor: 'bg-orange-100 text-orange-800',
       date: 'March 22, 2023',
@@ -135,54 +135,7 @@ export default function VeterinaryBlogPage() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            {/* Logo */}
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-
-            {/* Navigation */}
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-900 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>

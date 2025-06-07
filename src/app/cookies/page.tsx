@@ -1,5 +1,6 @@
 'use client';
 
+import { Navbar } from '@/components/layout/Navbar';
 import { PawPrint, Facebook, Twitter, Instagram } from 'lucide-react';
 import Link from 'next/link';
 
@@ -7,54 +8,7 @@ export default function CookiePolicyPage() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            {/* Logo */}
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-
-            {/* Navigation */}
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
@@ -74,15 +28,16 @@ export default function CookiePolicyPage() {
             </h2>
             <p className='text-gray-600 leading-relaxed mb-4'>
               As is common practice with almost all professional websites,
-              CariVet ("we", "us", "our") uses cookies, which are tiny files
-              that are downloaded to your device, to improve your experience.
+              CariVet (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) uses
+              cookies, which are tiny files that are downloaded to your device,
+              to improve your experience.
             </p>
             <p className='text-gray-600 leading-relaxed'>
               This page describes what information they gather, how we use it,
               and why we sometimes need to store these cookies. We will also
               share how you can prevent these cookies from being stored;
-              however, this may downgrade or 'break' certain elements of the
-              site's functionality.
+              however, this may downgrade or &apos;break&apos; certain elements
+              of the site&apos;s functionality.
             </p>
           </section>
 
@@ -217,9 +172,10 @@ export default function CookiePolicyPage() {
             </h2>
             <p className='text-gray-600 leading-relaxed mb-4'>
               Hopefully, that has clarified things for you and as was previously
-              mentioned if there is something that you aren't sure whether you
-              need or not it's usually safer to leave cookies enabled in case it
-              does interact with one of the features you use on our site.
+              mentioned if there is something that you aren&apos;t sure whether
+              you need or not it&apos;s usually safer to leave cookies enabled
+              in case it does interact with one of the features you use on our
+              site.
             </p>
             <p className='text-gray-600 leading-relaxed mb-6'>
               However, if you are still looking for more information, you can

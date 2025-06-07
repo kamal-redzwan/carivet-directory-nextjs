@@ -8,7 +8,6 @@ import {
   Phone,
   Globe,
   MapPin,
-  Clock,
   Mail,
   Check,
   PawPrint,
@@ -17,11 +16,28 @@ import {
   Instagram,
 } from 'lucide-react';
 import Link from 'next/link';
+import { Navbar } from '@/components/layout/Navbar';
+
+interface Clinic {
+  id: string;
+  name: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  website?: string;
+  email?: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  emergency: boolean;
+  specializations?: string[];
+  [key: string]: unknown;
+}
 
 export default function ClinicDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [clinic, setClinic] = useState<any>(null);
+  const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +66,7 @@ export default function ClinicDetailPage() {
         throw new Error('No clinic data found');
       }
 
-      setClinic(data);
+      setClinic(data as Clinic);
     } catch (err) {
       console.error('Error in loadClinic:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -59,9 +75,13 @@ export default function ClinicDetailPage() {
     }
   }
 
-  const safeGet = (obj: any, path: string, defaultValue: any = '') => {
+  const safeGet = <T,>(
+    obj: Record<string, unknown>,
+    path: string,
+    defaultValue: T
+  ): T => {
     try {
-      return obj && obj[path] ? obj[path] : defaultValue;
+      return (obj && (obj[path] as T)) || defaultValue;
     } catch {
       return defaultValue;
     }
@@ -71,9 +91,9 @@ export default function ClinicDetailPage() {
     if (!clinic) return 'Address not available';
 
     const parts = [
-      safeGet(clinic, 'street'),
-      safeGet(clinic, 'city'),
-      safeGet(clinic, 'state'),
+      safeGet<string>(clinic, 'street', ''),
+      safeGet<string>(clinic, 'city', ''),
+      safeGet<string>(clinic, 'state', ''),
     ].filter((part) => part && part.trim());
 
     return parts.length > 0 ? parts.join(', ') : 'Address not available';
@@ -125,54 +145,7 @@ export default function ClinicDetailPage() {
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            {/* Logo */}
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-
-            {/* Navigation */}
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-900 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Back to Clinics Link */}
@@ -209,14 +182,14 @@ export default function ClinicDetailPage() {
             {/* Clinic Name and Address */}
             <div>
               <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-                {safeGet(clinic, 'name', 'Clinic Name')}
+                {safeGet<string>(clinic, 'name', 'Clinic Name')}
               </h1>
               <p className='text-gray-600'>{formatAddress()}</p>
             </div>
 
             {/* Quick Actions */}
             <div className='flex gap-4'>
-              {safeGet(clinic, 'phone') && (
+              {safeGet<string>(clinic, 'phone', '') && (
                 <a
                   href={`tel:${clinic.phone}`}
                   className='inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors'
@@ -225,7 +198,7 @@ export default function ClinicDetailPage() {
                   Call Clinic
                 </a>
               )}
-              {safeGet(clinic, 'website') && (
+              {safeGet<string>(clinic, 'website', '') && (
                 <a
                   href={clinic.website}
                   target='_blank'
@@ -241,12 +214,13 @@ export default function ClinicDetailPage() {
             {/* About Section */}
             <div className='bg-white rounded-lg p-6 shadow-sm'>
               <h2 className='text-xl font-semibold text-gray-900 mb-4'>
-                About {safeGet(clinic, 'name', 'This Clinic')}
+                About {safeGet<string>(clinic, 'name', 'This Clinic')}
               </h2>
               <p className='text-gray-600 leading-relaxed'>
-                {safeGet(clinic, 'name', 'This clinic')} is a veterinary clinic
-                located in {safeGet(clinic, 'city', 'Kuala Lumpur')},{' '}
-                {safeGet(clinic, 'state', 'Malaysia')}. They provide
+                {safeGet<string>(clinic, 'name', 'This clinic')} is a veterinary
+                clinic located in{' '}
+                {safeGet<string>(clinic, 'city', 'Kuala Lumpur')},{' '}
+                {safeGet<string>(clinic, 'state', 'Malaysia')}. They provide
                 professional veterinary services for various animals and offer
                 specialized care to ensure the health and wellbeing of your
                 pets.
@@ -427,7 +401,7 @@ export default function ClinicDetailPage() {
                 Contact Information
               </h3>
               <div className='space-y-4'>
-                {safeGet(clinic, 'phone') && (
+                {safeGet<string>(clinic, 'phone', '') && (
                   <div className='flex items-start gap-3'>
                     <Phone size={16} className='text-emerald-600 mt-1' />
                     <div>
@@ -450,7 +424,7 @@ export default function ClinicDetailPage() {
                   </div>
                 </div>
 
-                {safeGet(clinic, 'email') && (
+                {safeGet<string>(clinic, 'email', '') && (
                   <div className='flex items-start gap-3'>
                     <Mail size={16} className='text-emerald-600 mt-1' />
                     <div>
@@ -467,31 +441,33 @@ export default function ClinicDetailPage() {
               </div>
 
               {/* Social Media */}
-              {(safeGet(clinic, 'facebook_url') ||
-                safeGet(clinic, 'instagram_url')) && (
+              {(safeGet<string>(clinic, 'facebook_url', '') ||
+                safeGet<string>(clinic, 'instagram_url', '')) && (
                 <div className='mt-6 pt-4 border-t border-gray-200'>
                   <h4 className='font-medium text-gray-900 mb-3'>
                     Follow on Social Media
                   </h4>
                   <div className='flex gap-3'>
-                    {safeGet(clinic, 'facebook_url') && (
+                    {safeGet<string>(clinic, 'facebook_url', '') && (
                       <a
-                        href={clinic.facebook_url}
+                        href={safeGet<string>(clinic, 'facebook_url', '')}
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700'
+                        className='w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors'
+                        aria-label='Facebook'
                       >
-                        <Facebook size={16} />
+                        <Facebook size={20} />
                       </a>
                     )}
-                    {safeGet(clinic, 'instagram_url') && (
+                    {safeGet<string>(clinic, 'instagram_url', '') && (
                       <a
-                        href={clinic.instagram_url}
+                        href={safeGet<string>(clinic, 'instagram_url', '')}
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='w-8 h-8 bg-pink-600 text-white rounded-full flex items-center justify-center hover:bg-pink-700'
+                        className='w-10 h-10 bg-pink-600 text-white rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors'
+                        aria-label='Instagram'
                       >
-                        <Instagram size={16} />
+                        <Instagram size={20} />
                       </a>
                     )}
                   </div>

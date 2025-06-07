@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
+import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import {
   PawPrint,
   Facebook,
@@ -18,11 +19,14 @@ import {
 import Link from 'next/link';
 import { BlogPost } from '@/lib/blog';
 import { MDXComponents } from '@/components/MDXComponents';
+import { Navbar } from '@/components/layout/Navbar';
 
 export default function BlogPostPage() {
   const params = useParams();
   const [post, setPost] = useState<BlogPost | null>(null);
-  const [mdxSource, setMdxSource] = useState<any>(null);
+  const [mdxSource, setMdxSource] = useState<MDXRemoteSerializeResult | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,51 +120,7 @@ export default function BlogPostPage() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-900 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Navbar } from '@/components/layout/Navbar';
 import { PawPrint, Facebook, Twitter, Instagram } from 'lucide-react';
 import Link from 'next/link';
 
@@ -7,54 +8,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            {/* Logo */}
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-
-            {/* Navigation */}
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
@@ -73,12 +27,12 @@ export default function PrivacyPolicyPage() {
               Introduction
             </h2>
             <p className='text-gray-600 leading-relaxed mb-4'>
-              CariVet ("we", "us", or "our") is committed to protecting your
-              privacy. This Privacy Policy explains how we collect, use,
-              disclose, and safeguard your information when you visit our
-              website carivet.my, including any other media form, media channel,
-              mobile website, or mobile application related or connected thereto
-              (collectively, the "Site").
+              CariVet (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is
+              committed to protecting your privacy. This Privacy Policy explains
+              how we collect, use, disclose, and safeguard your information when
+              you visit our website carivet.my, including any other media form,
+              media channel, mobile website, or mobile application related or
+              connected thereto (collectively, the &quot;Site&quot;).
             </p>
             <p className='text-gray-600 leading-relaxed'>
               Please read this Privacy Policy carefully. If you do not agree

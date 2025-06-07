@@ -1,5 +1,6 @@
 'use client';
 
+import { Navbar } from '@/components/layout/Navbar';
 import { PawPrint, Facebook, Twitter, Instagram } from 'lucide-react';
 import Link from 'next/link';
 
@@ -7,54 +8,7 @@ export default function TermsOfServicePage() {
   return (
     <div className='min-h-screen bg-white'>
       {/* Header Navigation */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
-            {/* Logo */}
-            <div className='flex items-center'>
-              <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-              <span className='text-xl font-bold text-gray-900'>CariVet</span>
-            </div>
-
-            {/* Navigation */}
-            <nav className='hidden md:flex space-x-8'>
-              <Link href='/' className='text-gray-600 hover:text-emerald-600'>
-                Home
-              </Link>
-              <Link
-                href='/clinics'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Find Clinics
-              </Link>
-              <Link
-                href='/tips'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Pet Care Tips
-              </Link>
-              <Link
-                href='/blog'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Blog
-              </Link>
-              <Link
-                href='/about'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                About
-              </Link>
-              <Link
-                href='/contact'
-                className='text-gray-600 hover:text-emerald-600'
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
@@ -73,14 +27,14 @@ export default function TermsOfServicePage() {
               1. Acceptance of Terms
             </h2>
             <p className='text-gray-600 leading-relaxed'>
-              By accessing and using CariVet (the "Service"), you accept and
-              agree to be bound by the terms and provisions of this agreement.
-              If you do not agree to abide by the above, please do not use this
-              service. In addition, when using this website's particular
-              services, you shall be subject to any posted guidelines or rules
-              applicable to such services, which may be posted and modified from
-              time to time. All such guidelines or rules are hereby incorporated
-              by reference into these Terms of Service.
+              By accessing and using CariVet (the &quot;Service&quot;), you
+              accept and agree to be bound by the terms and provisions of this
+              agreement. If you do not agree to abide by the above, please do
+              not use this service. In addition, when using this website&apos;s
+              particular services, you shall be subject to any posted guidelines
+              or rules applicable to such services, which may be posted and
+              modified from time to time. All such guidelines or rules are
+              hereby incorporated by reference into these Terms of Service.
             </p>
           </section>
 
@@ -94,18 +48,18 @@ export default function TermsOfServicePage() {
               including various communications tools, search services, clinic
               information, and personalized content through its network of
               properties which may be accessed through any various medium or
-              device now known or hereafter developed (the "Service"). You also
-              understand and agree that the Service may include advertisements
-              and that these advertisements are necessary for CariVet to provide
-              the Service.
+              device now known or hereafter developed (the &quot;Service&quot;).
+              You also understand and agree that the Service may include
+              advertisements and that these advertisements are necessary for
+              CariVet to provide the Service.
             </p>
             <p className='text-gray-600 leading-relaxed'>
               Unless explicitly stated otherwise, any new features that augment
               or enhance the current Service shall be subject to the Terms of
               Service. You understand and agree that the Service is provided
-              "AS-IS" and that CariVet assumes no responsibility for the
-              timeliness, deletion, mis-delivery or failure to store any user
-              communications or personalization settings.
+              &quot;AS-IS&quot; and that CariVet assumes no responsibility for
+              the timeliness, deletion, mis-delivery or failure to store any
+              user communications or personalization settings.
             </p>
           </section>
 
@@ -117,15 +71,15 @@ export default function TermsOfServicePage() {
             <p className='text-gray-600 leading-relaxed'>
               In consideration of your use of the Service, you agree to: (a)
               provide true, accurate, current and complete information about
-              yourself as prompted by the Service's registration form (such
-              information being the "Registration Data") and (b) maintain and
-              promptly update the Registration Data to keep it true, accurate,
-              current and complete. If you provide any information that is
-              untrue, inaccurate, not current or incomplete, or CariVet has
-              reasonable grounds to suspect that such information is untrue,
-              inaccurate, not current or incomplete, CariVet has the right to
-              suspend or terminate your account and refuse any and all current
-              or future use of the Service (or any portion thereof).
+              yourself as prompted by the Service&apos;s registration form (such
+              information being the &quot;Registration Data&quot;) and (b)
+              maintain and promptly update the Registration Data to keep it
+              true, accurate, current and complete. If you provide any
+              information that is untrue, inaccurate, not current or incomplete,
+              or CariVet has reasonable grounds to suspect that such information
+              is untrue, inaccurate, not current or incomplete, CariVet has the
+              right to suspend or terminate your account and refuse any and all
+              current or future use of the Service (or any portion thereof).
             </p>
           </section>
 
@@ -136,15 +90,15 @@ export default function TermsOfServicePage() {
             </h2>
             <p className='text-gray-600 leading-relaxed'>
               You will receive a password and account designation upon
-              completing the Service's registration process. You are responsible
-              for maintaining the confidentiality of the password and account
-              and are fully responsible for all activities that occur under your
-              password or account. You agree to (a) immediately notify CariVet
-              of any unauthorized use of your password or account or any other
-              breach of security, and (b) ensure that you exit from your account
-              at the end of each session. CariVet cannot and will not be liable
-              for any loss or damage arising from your failure to comply with
-              this Section.
+              completing the Service&apos;s registration process. You are
+              responsible for maintaining the confidentiality of the password
+              and account and are fully responsible for all activities that
+              occur under your password or account. You agree to (a) immediately
+              notify CariVet of any unauthorized use of your password or account
+              or any other breach of security, and (b) ensure that you exit from
+              your account at the end of each session. CariVet cannot and will
+              not be liable for any loss or damage arising from your failure to
+              comply with this Section.
             </p>
           </section>
 
@@ -156,13 +110,13 @@ export default function TermsOfServicePage() {
             <p className='text-gray-600 leading-relaxed mb-4'>
               You understand that all information, data, text, software, music,
               sound, photographs, graphics, video, messages or other materials
-              ("Content"), whether publicly posted or privately transmitted, are
-              the sole responsibility of the person from which such Content
-              originated. This means that you, and not CariVet, are entirely
-              responsible for all Content that you upload, post, email, transmit
-              or otherwise make available via the Service. CariVet does not
-              control the Content posted via the Service and, as such, does not
-              guarantee the accuracy, integrity or quality of such Content.
+              (&quot;Content&quot;), whether publicly posted or privately
+              transmitted, are the sole responsibility of the person from which
+              such Content originated. This means that you, and not CariVet, are
+              entirely responsible for all Content that you upload, post, email,
+              transmit or otherwise make available via the Service. CariVet does
+              not control the Content posted via the Service and, as such, does
+              not guarantee the accuracy, integrity or quality of such Content.
             </p>
             <p className='text-gray-600 leading-relaxed mb-4'>
               You agree to not use the Service to:
@@ -172,8 +126,8 @@ export default function TermsOfServicePage() {
                 • Upload, post, email, transmit or otherwise make available any
                 Content that is unlawful, harmful, threatening, abusive,
                 harassing, tortious, defamatory, vulgar, obscene, libelous,
-                invasive of another's privacy, hateful, or racially, ethnically
-                or otherwise objectionable;
+                invasive of another&apos;s privacy, hateful, or racially,
+                ethnically or otherwise objectionable;
               </li>
               <li>• Harm minors in any way;</li>
               <li>
@@ -200,8 +154,9 @@ export default function TermsOfServicePage() {
               <li>
                 • Upload, post, email, transmit or otherwise make available any
                 unsolicited or unauthorized advertising, promotional materials,
-                "junk mail," "spam," "chain letters," "pyramid schemes," or any
-                other form of solicitation;
+                &quot;junk mail,&quot; &quot;spam,&quot; &quot;chain
+                letters,&quot; &quot;pyramid schemes,&quot; or any other form of
+                solicitation;
               </li>
               <li>
                 • Upload, post, email, transmit or otherwise make available any
@@ -216,7 +171,7 @@ export default function TermsOfServicePage() {
                 procedures, policies or regulations of networks connected to the
                 Service;
               </li>
-              <li>• "Stalk" or otherwise harass another; or</li>
+              <li>• &quot;Stalk&quot; or otherwise harass another; or</li>
               <li>
                 • Collect or store personal data about other users in connection
                 with the prohibited conduct and activities set forth in
@@ -273,11 +228,11 @@ export default function TermsOfServicePage() {
             </p>
             <p className='text-gray-600 leading-relaxed mb-4'>
               YOUR USE OF THE SERVICE IS AT YOUR SOLE RISK. THE SERVICE IS
-              PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. CARIVET EXPRESSLY
-              DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED,
-              INCLUDING, BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
-              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-              NON-INFRINGEMENT.
+              PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot;
+              BASIS. CARIVET EXPRESSLY DISCLAIMS ALL WARRANTIES OF ANY KIND,
+              WHETHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO THE
+              IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+              PURPOSE AND NON-INFRINGEMENT.
             </p>
             <p className='text-gray-600 leading-relaxed mb-4'>
               CARIVET MAKES NO WARRANTY THAT (i) THE SERVICE WILL MEET YOUR

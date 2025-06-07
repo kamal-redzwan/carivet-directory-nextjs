@@ -9,15 +9,17 @@ import {
   Wrench,
 } from 'lucide-react';
 
+interface Filters {
+  state: string;
+  city: string;
+  emergency: boolean;
+  animalTypes: string[];
+  services: string[];
+}
+
 interface FilterPanelProps {
-  filters: {
-    state: string;
-    city: string;
-    emergency: boolean;
-    animalTypes: string[];
-    services: string[];
-  };
-  onFilterChange: (filters: any) => void;
+  filters: Filters;
+  onFilterChange: (filters: Filters) => void;
   availableStates: string[];
   availableCities: string[];
   availableAnimalTypes: string[];
@@ -34,7 +36,7 @@ export default function FilterPanel({
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const updateFilter = (key: string, value: any) => {
+  const updateFilter = (key: keyof Filters, value: Filters[keyof Filters]) => {
     onFilterChange({ ...filters, [key]: value });
   };
 
@@ -43,7 +45,7 @@ export default function FilterPanel({
     const newArray = currentArray.includes(value)
       ? currentArray.filter((item) => item !== value)
       : [...currentArray, value];
-    updateFilter(key, newArray);
+    updateFilter(key as keyof Filters, newArray);
   };
 
   const clearAllFilters = () => {
