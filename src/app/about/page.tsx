@@ -1,154 +1,199 @@
 'use client';
 
-import { Footer } from '@/components/layout/Footer';
-import { Navbar } from '@/components/layout/Navbar';
-import { Search, FileText, Eye, MapPin } from 'lucide-react';
-import Link from 'next/link';
+import { HeroPageLayout } from '@/components/layout/PageLayout';
+import { Heart, PawPrint, Users, Globe } from 'lucide-react';
 
 export default function AboutCariVetPage() {
   return (
-    <div className='min-h-screen bg-white'>
-      {/* Header Navigation */}
-      <Navbar />
-
+    <HeroPageLayout
+      title='About CariVet - Your Trusted Veterinary Directory'
+      description="Learn about CariVet, Malaysia's leading veterinary directory service connecting pet owners with trusted veterinary clinics."
+    >
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <h1 className='text-4xl font-bold mb-4'>About CariVet</h1>
           <p className='text-xl text-emerald-100'>
-            Connecting pet owners with quality veterinary care across Malaysia
+            Connecting pet owners with trusted veterinary care across Malaysia
           </p>
         </div>
       </section>
 
       {/* Main Content */}
-      <main className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
+      <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
         {/* Our Mission */}
-        <section className='mb-16 text-center'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-8'>Our Mission</h2>
-
-          <div className='space-y-6 text-gray-600 leading-relaxed'>
-            <p>
-              CariVet was created with a simple mission: to help pet owners in
-              Malaysia quickly find the right veterinary care for their beloved
-              animals. We understand that finding the right veterinary clinic
-              can be challenging, especially when you need specialized services
-              or emergency care.
-            </p>
-
-            <p>
-              Our platform provides a comprehensive directory of veterinary
-              clinics across Malaysia, complete with detailed information about
-              services, specializations, operating hours, and contact details.
-              We aim to make the process of finding veterinary care as simple
-              and stress-free as possible.
+        <section className='mb-16'>
+          <div className='max-w-3xl mx-auto text-center'>
+            <h2 className='text-3xl font-bold text-gray-900 mb-6'>
+              Our Mission
+            </h2>
+            <p className='text-lg text-gray-600'>
+              At CariVet, we believe that every pet deserves access to quality
+              veterinary care. Our mission is to make it easier for pet owners
+              to find and connect with trusted veterinary clinics across
+              Malaysia, ensuring that pets receive the best possible care when
+              they need it most.
             </p>
           </div>
         </section>
 
-        {/* What We Offer */}
+        {/* What We Do */}
         <section className='mb-16'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-12 text-center'>
-            What We Offer
+          <h2 className='text-3xl font-bold text-gray-900 mb-8 text-center'>
+            What We Do
           </h2>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-            {/* Comprehensive Search */}
-            <div className='text-center'>
-              <div className='w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Search className='h-8 w-8 text-emerald-600' />
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-4'>
+                <PawPrint className='h-6 w-6 text-emerald-600' />
               </div>
-              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
-                Comprehensive Search
+              <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+                Veterinary Directory
               </h3>
-              <p className='text-gray-600 leading-relaxed'>
-                Find clinics based on location, services offered, animal types
-                treated, and more with our powerful search and filtering tools.
+              <p className='text-gray-600'>
+                Comprehensive listing of veterinary clinics across Malaysia with
+                detailed information about services, facilities, and expertise.
               </p>
             </div>
 
-            {/* Detailed Information */}
-            <div className='text-center'>
-              <div className='w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <FileText className='h-8 w-8 text-emerald-600' />
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-4'>
+                <Heart className='h-6 w-6 text-emerald-600' />
               </div>
-              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
-                Detailed Information
+              <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+                Pet Care Resources
               </h3>
-              <p className='text-gray-600 leading-relaxed'>
-                Access comprehensive details about each clinic, including
-                services, specializations, operating hours, and contact
-                information.
+              <p className='text-gray-600'>
+                Educational content and resources to help pet owners make
+                informed decisions about their pets&apos; health and well-being.
               </p>
             </div>
 
-            {/* Emergency Services */}
-            <div className='text-center'>
-              <div className='w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Eye className='h-8 w-8 text-emerald-600' />
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-4'>
+                <Users className='h-6 w-6 text-emerald-600' />
               </div>
-              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
-                Emergency Services
+              <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+                Community Support
               </h3>
-              <p className='text-gray-600 leading-relaxed'>
-                Quickly identify clinics that offer emergency veterinary
-                services when your pet needs urgent care.
+              <p className='text-gray-600'>
+                Building a community of pet owners and veterinary professionals
+                who share knowledge and experiences.
               </p>
             </div>
 
-            {/* Nationwide Coverage */}
-            <div className='text-center'>
-              <div className='w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <MapPin className='h-8 w-8 text-emerald-600' />
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-4'>
+                <Globe className='h-6 w-6 text-emerald-600' />
               </div>
-              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+              <h3 className='text-xl font-semibold text-gray-900 mb-2'>
                 Nationwide Coverage
               </h3>
-              <p className='text-gray-600 leading-relaxed'>
-                Our directory includes veterinary clinics from across Malaysia,
-                helping you find care no matter where you are.
+              <p className='text-gray-600'>
+                Extensive network of veterinary clinics covering all major
+                cities and regions in Malaysia.
               </p>
             </div>
           </div>
         </section>
 
-        {/* For Veterinary Clinics */}
-        <section>
-          <h2 className='text-3xl font-bold text-gray-900 mb-8 text-center'>
-            For Veterinary Clinics
-          </h2>
-
-          <div className='text-gray-600 leading-relaxed mb-8'>
-            <p>
-              Are you a veterinary clinic in Malaysia? Join our directory to
-              increase your visibility and connect with pet owners in your area.
-              Our platform helps showcase your services, specializations, and
-              unique offerings to potential clients.
-            </p>
+        {/* Our Story */}
+        <section className='mb-16'>
+          <div className='max-w-3xl mx-auto'>
+            <h2 className='text-3xl font-bold text-gray-900 mb-6 text-center'>
+              Our Story
+            </h2>
+            <div className='prose prose-emerald max-w-none'>
+              <p className='text-gray-600 mb-4'>
+                CariVet was founded in 2023 with a simple yet powerful vision:
+                to make veterinary care more accessible to pet owners across
+                Malaysia. We recognized the challenges that pet owners face when
+                trying to find reliable veterinary care, especially in times of
+                emergency.
+              </p>
+              <p className='text-gray-600 mb-4'>
+                What started as a small directory has grown into a comprehensive
+                platform that connects thousands of pet owners with trusted
+                veterinary clinics every day. Our commitment to quality and
+                transparency has made us the go-to resource for pet owners
+                seeking veterinary care in Malaysia.
+              </p>
+              <p className='text-gray-600'>
+                Today, we continue to expand our network and enhance our
+                services to better serve the needs of both pet owners and
+                veterinary professionals. We believe that by making veterinary
+                care more accessible, we can help improve the health and
+                well-being of pets across the country.
+              </p>
+            </div>
           </div>
+        </section>
 
-          {/* Get Listed Section */}
-          <div className='bg-emerald-50 rounded-lg p-8 text-center'>
-            <h3 className='text-2xl font-semibold text-gray-900 mb-4'>
-              Get Listed
-            </h3>
-            <p className='text-gray-600 mb-6 leading-relaxed'>
-              If you&apos;d like to add your clinic to our directory or update
-              your existing information, please contact us. We&apos;re committed
-              to providing accurate and up-to-date information to pet owners.
-            </p>
-            <Link
+        {/* Our Values */}
+        <section className='mb-16'>
+          <h2 className='text-3xl font-bold text-gray-900 mb-8 text-center'>
+            Our Values
+          </h2>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+                Trust & Reliability
+              </h3>
+              <p className='text-gray-600'>
+                We verify and maintain high standards for all veterinary clinics
+                listed on our platform to ensure pet owners can trust the care
+                their pets receive.
+              </p>
+            </div>
+
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+                Accessibility
+              </h3>
+              <p className='text-gray-600'>
+                We believe that quality veterinary care should be accessible to
+                all pet owners, regardless of their location or circumstances.
+              </p>
+            </div>
+
+            <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-100'>
+              <h3 className='text-xl font-semibold text-gray-900 mb-3'>
+                Community
+              </h3>
+              <p className='text-gray-600'>
+                We foster a supportive community where pet owners and veterinary
+                professionals can share knowledge and experiences.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        <section className='text-center'>
+          <h2 className='text-3xl font-bold text-gray-900 mb-6'>
+            Join Our Community
+          </h2>
+          <p className='text-lg text-gray-600 mb-8 max-w-2xl mx-auto'>
+            Whether you&apos;re a pet owner looking for veterinary care or a
+            veterinary professional interested in listing your clinic, we invite
+            you to join our growing community.
+          </p>
+          <div className='flex justify-center gap-4'>
+            <a
+              href='/clinics'
+              className='bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors'
+            >
+              Find a Clinic
+            </a>
+            <a
               href='/contact'
-              className='inline-block bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors font-medium'
+              className='bg-white text-emerald-600 px-6 py-3 rounded-md border border-emerald-600 hover:bg-emerald-50 transition-colors'
             >
               Contact Us
-            </Link>
+            </a>
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    </HeroPageLayout>
   );
 }

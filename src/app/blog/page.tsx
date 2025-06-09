@@ -4,28 +4,32 @@ import { PawPrint, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { BlogPost } from '@/lib/blog';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { HeroPageLayout } from '@/components/layout/PageLayout';
 
 export default function VeterinaryBlogPage() {
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
   const [latestPosts, setLatestPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadBlogPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/blog');
+      const data = await response.json();
+      setFeaturedPosts(data.featuredPosts || []);
+      setLatestPosts(data.latestPosts || []);
+    } catch (error) {
+      console.error('Failed to load blog posts:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to load blog posts'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadBlogPosts() {
-      try {
-        const response = await fetch('/api/blog');
-        const data = await response.json();
-        setFeaturedPosts(data.featuredPosts || []);
-        setLatestPosts(data.latestPosts || []);
-      } catch (error) {
-        console.error('Failed to load blog posts:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadBlogPosts();
   }, []);
 
@@ -116,22 +120,16 @@ export default function VeterinaryBlogPage() {
   const displayLatestPosts =
     latestPosts.length > 0 ? latestPosts : fallbackLatestArticles;
 
-  if (loading) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Loading blog posts...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className='min-h-screen bg-white'>
-      {/* Header Navigation */}
-      <Navbar />
-
+    <HeroPageLayout
+      title='Veterinary Blog - CariVet'
+      description='Expert insights and advice on pet health, wellness, and care'
+      maxWidth='7xl'
+      loading={loading}
+      error={error}
+      onRetry={() => loadBlogPosts()}
+      loadingVariant='skeleton'
+    >
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
@@ -318,9 +316,6 @@ export default function VeterinaryBlogPage() {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    </HeroPageLayout>
   );
 }

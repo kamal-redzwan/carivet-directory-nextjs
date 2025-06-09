@@ -18,8 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { HeroPageLayout } from '@/components/layout/PageLayout';
 
 export default function Home() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -67,33 +66,6 @@ export default function Home() {
     loadClinics();
   }, [loadClinics]);
 
-  if (loading) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Loading veterinary clinics...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <p className='text-red-600 mb-4'>Error: {error}</p>
-          <button
-            onClick={loadClinics}
-            className='px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700'
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const handleHeroSearch = () => {
     const searchParams = new URLSearchParams();
 
@@ -136,10 +108,14 @@ export default function Home() {
   const featuredClinics = clinics.slice(0, 3);
 
   return (
-    <div className='min-h-screen bg-white'>
-      {/* Header Navigation */}
-      <Navbar />
-
+    <HeroPageLayout
+      title='CariVet - Find Veterinary Clinics in Malaysia'
+      description='Find trusted veterinary clinics across Malaysia. CariVet helps pet owners locate the best veterinary care for their beloved animals.'
+      loading={loading}
+      error={error}
+      onRetry={loadClinics}
+      noPadding // Hero pages often handle their own padding
+    >
       {/* Hero Section */}
       <section className='bg-gradient-to-br from-emerald-500 to-emerald-600 text-white py-20'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
@@ -501,9 +477,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    </HeroPageLayout>
   );
 }

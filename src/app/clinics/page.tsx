@@ -8,8 +8,16 @@ import { useClinicFilters } from '@/hooks/useClinicFilters';
 import { Clinic } from '@/types/clinic';
 import { PawPrint } from 'lucide-react';
 import Link from 'next/link';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { HeroPageLayout } from '@/components/layout/PageLayout';
+
+type FilterState = {
+  state: string;
+  city: string;
+  emergency: boolean;
+  animalTypes: string[];
+  services: string[];
+};
+
 export default function ClinicsPage() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,11 +41,19 @@ export default function ClinicsPage() {
     const state = searchParams.get('state');
     const animal = searchParams.get('animal');
 
-    const newFilters = { ...filters };
-
-    if (emergency === 'true') {
-      newFilters.emergency = true;
+    // Only update if we have URL parameters
+    if (!emergency && !service && !state && !animal) {
+      return;
     }
+
+    // Create new filters object with default values
+    const newFilters: FilterState = {
+      state: state || '',
+      city: '',
+      emergency: emergency === 'true',
+      animalTypes: [],
+      services: [],
+    };
 
     if (service) {
       // Convert service parameter to match our data
@@ -52,10 +68,6 @@ export default function ClinicsPage() {
 
       const mappedService = serviceMap[service] || service;
       newFilters.services = [mappedService];
-    }
-
-    if (state) {
-      newFilters.state = state;
     }
 
     if (animal) {
@@ -73,11 +85,9 @@ export default function ClinicsPage() {
       newFilters.animalTypes = [mappedAnimal];
     }
 
-    // Only update if there are actual changes
-    if (JSON.stringify(newFilters) !== JSON.stringify(filters)) {
-      updateFilters(newFilters);
-    }
-  }, [searchParams, filters, updateFilters]);
+    // Update filters with URL parameters
+    updateFilters(newFilters);
+  }, [searchParams]); // Only depend on searchParams
 
   async function loadClinics() {
     try {
@@ -118,38 +128,16 @@ export default function ClinicsPage() {
     }
   });
 
-  if (loading) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Loading veterinary clinics...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <p className='text-red-600 mb-4'>Error: {error}</p>
-          <button
-            onClick={loadClinics}
-            className='px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700'
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className='min-h-screen bg-white'>
-      {/* Header Navigation */}
-      <Navbar />
-
+    <HeroPageLayout
+      title='Find Veterinary Clinics - CariVet Malaysia'
+      description='Discover the best veterinary care for your pets in Malaysia'
+      loading={loading}
+      error={error}
+      onRetry={loadClinics}
+      background='white'
+      noPadding={true}
+    >
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-12'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
@@ -177,9 +165,17 @@ export default function ClinicsPage() {
                 </h4>
                 <select
                   value={filters.state}
-                  onChange={(e) =>
-                    updateFilters({ ...filters, state: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newState = e.target.value;
+                    // Reset other filters when state changes
+                    updateFilters({
+                      state: newState,
+                      city: '', // Reset city when state changes
+                      emergency: false,
+                      animalTypes: [],
+                      services: [],
+                    });
+                  }}
                   className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-3'
                 >
                   <option value=''>All Locations</option>
@@ -631,9 +627,6 @@ export default function ClinicsPage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    </HeroPageLayout>
   );
 }

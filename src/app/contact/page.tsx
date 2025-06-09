@@ -1,10 +1,9 @@
 'use client';
 
-import { Footer } from '@/components/layout/Footer';
-import { Navbar } from '@/components/layout/Navbar';
+import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { HeroPageLayout } from '@/components/layout/PageLayout';
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -38,10 +37,10 @@ export default function ContactUsPage() {
   };
 
   return (
-    <div className='min-h-screen bg-white'>
-      {/* Header Navigation */}
-      <Navbar />
-
+    <HeroPageLayout
+      title='Contact Us - CariVet'
+      description='Get in touch with CariVet for questions, suggestions, or feedback about our veterinary directory service.'
+    >
       {/* Hero Section */}
       <section className='bg-emerald-600 text-white py-16'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
@@ -61,44 +60,43 @@ export default function ContactUsPage() {
             <h2 className='text-2xl font-bold text-gray-900 mb-6'>
               Send Us a Message
             </h2>
-
             <form onSubmit={handleSubmit} className='space-y-6'>
-              {/* Name Fields */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div>
-                  <label
-                    htmlFor='firstName'
-                    className='block text-sm font-medium text-gray-700 mb-2'
-                  >
-                    First Name
-                  </label>
-                  <input
-                    type='text'
-                    id='firstName'
-                    name='firstName'
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor='lastName'
-                    className='block text-sm font-medium text-gray-700 mb-2'
-                  >
-                    Last Name
-                  </label>
-                  <input
-                    type='text'
-                    id='lastName'
-                    name='lastName'
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                    required
-                  />
-                </div>
+              {/* First Name */}
+              <div>
+                <label
+                  htmlFor='firstName'
+                  className='block text-sm font-medium text-gray-700 mb-2'
+                >
+                  First Name
+                </label>
+                <input
+                  type='text'
+                  id='firstName'
+                  name='firstName'
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+                  required
+                />
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label
+                  htmlFor='lastName'
+                  className='block text-sm font-medium text-gray-700 mb-2'
+                >
+                  Last Name
+                </label>
+                <input
+                  type='text'
+                  id='lastName'
+                  name='lastName'
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+                  required
+                />
               </div>
 
               {/* Email */}
@@ -107,7 +105,7 @@ export default function ContactUsPage() {
                   htmlFor='email'
                   className='block text-sm font-medium text-gray-700 mb-2'
                 >
-                  Email Address
+                  Email
                 </label>
                 <input
                   type='email'
@@ -126,7 +124,7 @@ export default function ContactUsPage() {
                   htmlFor='phone'
                   className='block text-sm font-medium text-gray-700 mb-2'
                 >
-                  Phone Number (Optional)
+                  Phone
                 </label>
                 <input
                   type='tel'
@@ -285,63 +283,9 @@ export default function ContactUsPage() {
                 </div>
               </div>
             </div>
-
-            {/* Connect With Us - HIDDEN */}
-            {/* <div className='bg-emerald-50 rounded-lg p-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-3'>
-                Connect With Us
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Follow us on social media for updates, pet care tips, and more.
-              </p>
-              <div className='flex gap-3'>
-                <a
-                  href='#'
-                  className='w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors'
-                  aria-label='Facebook'
-                >
-                  <Facebook size={20} />
-                </a>
-                <a
-                  href='#'
-                  className='w-10 h-10 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors'
-                  aria-label='Twitter'
-                >
-                  <Twitter size={20} />
-                </a>
-                <a
-                  href='#'
-                  className='w-10 h-10 bg-pink-600 text-white rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors'
-                  aria-label='Instagram'
-                >
-                  <Instagram size={20} />
-                </a>
-                <a
-                  href='#'
-                  className='w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors'
-                  aria-label='LinkedIn'
-                >
-                  <Linkedin size={20} />
-                </a>
-              </div>
-            </div> */}
           </div>
         </div>
-
-        {/* Find Us - Map Section - HIDDEN */}
-        {/* <section className='mt-16'>
-          <h2 className='text-2xl font-bold text-gray-900 mb-6'>Find Us</h2>
-          <div className='w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center'>
-            <div className='text-center text-gray-500'>
-              <MapPin size={48} className='mx-auto mb-2' />
-              <p>Map Placeholder - Replace with actual map embed</p>
-            </div>
-          </div>
-        </section> */}
       </main>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    </HeroPageLayout>
   );
 }

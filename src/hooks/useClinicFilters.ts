@@ -148,14 +148,19 @@ export function useClinicFilters(clinics: Clinic[], searchQuery: string) {
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => {
-      const updated = { ...prev, ...newFilters };
-
-      // If state changes, reset city
+      // If we're updating the state, reset all other filters
       if (newFilters.state !== undefined && newFilters.state !== prev.state) {
-        updated.city = '';
+        return {
+          state: newFilters.state,
+          city: '',
+          emergency: false,
+          animalTypes: [],
+          services: [],
+        };
       }
 
-      return updated;
+      // Otherwise, do a partial update
+      return { ...prev, ...newFilters };
     });
   };
 
