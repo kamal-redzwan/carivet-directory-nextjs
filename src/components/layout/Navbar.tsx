@@ -30,8 +30,6 @@ interface NavbarProps {
   ctaHref?: string;
   /** Sticky navbar */
   sticky?: boolean;
-  /** Transparent background when at top */
-  transparentOnTop?: boolean;
 }
 
 const defaultNavItems: NavItem[] = [
@@ -50,23 +48,9 @@ export function Navbar({
   ctaText = 'Find Clinics',
   ctaHref = '/clinics',
   sticky = true,
-  transparentOnTop = false,
 }: NavbarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  // Handle scroll for transparent navbar
-  useEffect(() => {
-    if (!transparentOnTop) return;
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [transparentOnTop]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -81,27 +65,15 @@ export function Navbar({
   };
 
   const navbarClasses = cn(
-    'w-full transition-all duration-300 z-50',
+    'w-full bg-white shadow-sm border-b border-gray-200 transition-all duration-300 z-50',
     sticky && 'sticky top-0',
-    transparentOnTop
-      ? isScrolled
-        ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200'
-        : 'bg-transparent'
-      : 'bg-white shadow-sm border-b border-gray-200',
     className
   );
-
-  const isTransparent = transparentOnTop && !isScrolled;
 
   const DefaultLogo = () => (
     <div className='flex items-center'>
       <PawPrint className='h-8 w-8 text-emerald-600 mr-2' />
-      <span
-        className={cn(
-          'text-xl font-bold transition-colors',
-          isTransparent ? 'text-white' : 'text-gray-900'
-        )}
-      >
+      <span className='text-xl font-bold text-gray-900 transition-colors'>
         {brandName}
       </span>
     </div>
@@ -128,8 +100,6 @@ export function Navbar({
                     'relative font-medium transition-colors duration-200 py-2',
                     active
                       ? 'text-emerald-600'
-                      : isTransparent
-                      ? 'text-white hover:text-emerald-200'
                       : 'text-gray-600 hover:text-emerald-600'
                   )}
                   title={item.description}
@@ -146,15 +116,7 @@ export function Navbar({
           {/* CTA Button (Desktop) */}
           {showCTA && (
             <div className='hidden md:block'>
-              <Button
-                asChild
-                variant={isTransparent ? 'outline' : 'default'}
-                className={
-                  isTransparent
-                    ? 'border-white text-white hover:bg-white hover:text-emerald-600'
-                    : ''
-                }
-              >
+              <Button asChild>
                 <Link href={ctaHref}>{ctaText}</Link>
               </Button>
             </div>
@@ -163,12 +125,7 @@ export function Navbar({
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={cn(
-              'md:hidden p-2 rounded-lg transition-colors',
-              isTransparent
-                ? 'text-white hover:bg-white/20'
-                : 'text-gray-600 hover:bg-gray-100'
-            )}
+            className='md:hidden p-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-100'
             aria-label='Toggle navigation menu'
             aria-expanded={isOpen}
           >
@@ -183,12 +140,7 @@ export function Navbar({
             isOpen ? 'max-h-96 pb-4' : 'max-h-0'
           )}
         >
-          <div
-            className={cn(
-              'rounded-lg mx-4 mt-4',
-              isTransparent ? 'bg-white/95 backdrop-blur-md' : 'bg-white border'
-            )}
-          >
+          <div className='bg-white border rounded-lg mx-4 mt-4'>
             <nav className='p-4 space-y-1'>
               {navItems.map((item) => {
                 const active = isActive(item.href);
@@ -226,7 +178,5 @@ export function Navbar({
 
 // Export variants for different use cases
 export const MainNavbar = () => <Navbar />;
-
-export const TransparentNavbar = () => <Navbar transparentOnTop />;
 
 export const SimpleNavbar = () => <Navbar showCTA={false} />;

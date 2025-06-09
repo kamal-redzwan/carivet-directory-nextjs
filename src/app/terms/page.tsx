@@ -1,5 +1,6 @@
 'use client';
 
+import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { PawPrint, Facebook, Twitter, Instagram } from 'lucide-react';
 import Link from 'next/link';
@@ -277,118 +278,7 @@ export default function TermsOfServicePage() {
       </main>
 
       {/* Footer */}
-      <footer className='bg-emerald-600 text-white py-12 mt-16'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
-            {/* CariVet Info */}
-            <div>
-              <div className='flex items-center mb-4'>
-                <PawPrint className='h-6 w-6 mr-2' />
-                <span className='text-lg font-bold'>CariVet</span>
-              </div>
-              <p className='text-emerald-100 text-sm'>
-                Helping pet owners in Malaysia find the right veterinary care
-                for their beloved animals.
-              </p>
-              <div className='flex space-x-4 mt-4'>
-                <Facebook className='h-5 w-5 text-emerald-200 hover:text-white cursor-pointer' />
-                <Twitter className='h-5 w-5 text-emerald-200 hover:text-white cursor-pointer' />
-                <Instagram className='h-5 w-5 text-emerald-200 hover:text-white cursor-pointer' />
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className='text-lg font-semibold mb-4'>Quick Links</h4>
-              <ul className='space-y-2 text-emerald-100'>
-                <li>
-                  <Link href='/' className='hover:text-white'>
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/clinics' className='hover:text-white'>
-                    Find Clinics
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/tips' className='hover:text-white'>
-                    Pet Care Tips
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/blog' className='hover:text-white'>
-                    Veterinary Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/about' className='hover:text-white'>
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/contact' className='hover:text-white'>
-                    Contact Us
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h4 className='text-lg font-semibold mb-4'>Resources</h4>
-              <ul className='space-y-2 text-emerald-100'>
-                <li>
-                  <Link href='/tips' className='hover:text-white'>
-                    Pet Care Tips
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/blog' className='hover:text-white'>
-                    Veterinary Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/emergency' className='hover:text-white'>
-                    Emergency Services
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/add-clinic' className='hover:text-white'>
-                    Add Your Clinic
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className='text-lg font-semibold mb-4'>Legal</h4>
-              <ul className='space-y-2 text-emerald-100'>
-                <li>
-                  <Link href='/privacy' className='hover:text-white'>
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/terms' className='hover:text-white'>
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link href='/cookies' className='hover:text-white'>
-                    Cookie Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className='border-t border-emerald-500 mt-8 pt-8 text-center text-emerald-100'>
-            <p>&copy; 2025 CariVet Malaysia. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
