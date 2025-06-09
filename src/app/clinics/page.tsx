@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
 import { useClinicFilters } from '@/hooks/useClinicFilters';
 import { Clinic } from '@/types/clinic';
-import { PawPrint, Facebook, Twitter, Instagram } from 'lucide-react';
+import { PawPrint } from 'lucide-react';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';

@@ -2,16 +2,7 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
-import {
-  PawPrint,
-  Facebook,
-  Twitter,
-  Instagram,
-  Search,
-  FileText,
-  Eye,
-  MapPin,
-} from 'lucide-react';
+import { Search, FileText, Eye, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AboutCariVetPage() {

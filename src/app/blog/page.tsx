@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  PawPrint,
-  Facebook,
-  Twitter,
-  Instagram,
-  ChevronRight,
-} from 'lucide-react';
+import { PawPrint, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { BlogPost } from '@/lib/blog';

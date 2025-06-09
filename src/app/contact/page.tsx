@@ -2,16 +2,7 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
-import {
-  PawPrint,
-  Facebook,
-  Twitter,
-  Instagram,
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-} from 'lucide-react';
+import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 

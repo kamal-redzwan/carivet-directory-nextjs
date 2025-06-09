@@ -9,7 +9,6 @@ import {
   PawPrint,
   Facebook,
   Twitter,
-  Instagram,
   ArrowLeft,
   Calendar,
   User,

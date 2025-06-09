@@ -15,9 +15,6 @@ import {
   Stethoscope,
   Syringe,
   PawPrint,
-  Facebook,
-  Twitter,
-  Instagram,
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
