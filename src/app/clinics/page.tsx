@@ -9,6 +9,7 @@ import { Clinic } from '@/types/clinic';
 import { PawPrint } from 'lucide-react';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
+import { SimpleHero } from '@/components/layout/HeroSection';
 
 type FilterState = {
   state: string;
@@ -139,14 +140,11 @@ export default function ClinicsPage() {
       noPadding={true}
     >
       {/* Hero Section */}
-      <section className='bg-emerald-600 text-white py-12'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h1 className='text-3xl font-bold mb-2'>Find Veterinary Clinics</h1>
-          <p className='text-emerald-100'>
-            Discover the best veterinary care for your pets in Malaysia
-          </p>
-        </div>
-      </section>
+      <SimpleHero
+        title='Find Veterinary Clinics'
+        subtitle='Discover the best veterinary care for your pets in Malaysia'
+        size='sm'
+      />
 
       {/* Main Content */}
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>

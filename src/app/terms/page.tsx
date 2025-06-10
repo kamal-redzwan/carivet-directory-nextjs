@@ -1,18 +1,24 @@
 'use client';
 
 import { PageLayout } from '@/components/layout/PageLayout';
+import { SimpleHero } from '@/components/layout/HeroSection';
 
 export default function TermsOfServicePage() {
   return (
     <PageLayout
       title='Terms of Service - CariVet'
       description='Read our terms of service to understand the rules and guidelines for using CariVet.'
+      noPadding
     >
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-8'>
-          Terms of Service
-        </h1>
+      {/* Hero Section */}
+      <SimpleHero
+        title='Terms of Service'
+        subtitle='Please read these terms carefully before using our services'
+        size='sm'
+        bgColor='bg-gray-800'
+      />
 
+      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
         <div className='prose prose-emerald max-w-none'>
           <p className='text-lg text-gray-600 mb-8'>
             Last updated: March 15, 2024

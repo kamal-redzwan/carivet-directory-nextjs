@@ -1,18 +1,24 @@
 'use client';
 
 import { PageLayout } from '@/components/layout/PageLayout';
+import { SimpleHero } from '@/components/layout/HeroSection';
 
 export default function PrivacyPolicyPage() {
   return (
     <PageLayout
       title='Privacy Policy - CariVet'
       description='Learn about how CariVet collects, uses, and protects your personal information.'
+      noPadding
     >
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-8'>
-          Privacy Policy
-        </h1>
+      {/* Hero Section */}
+      <SimpleHero
+        title='Privacy Policy'
+        subtitle='Learn how we collect, use, and protect your personal information'
+        size='sm'
+        bgColor='bg-gray-800'
+      />
 
+      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
         <div className='prose prose-emerald max-w-none'>
           <p className='text-lg text-gray-600 mb-8'>
             Last updated: March 15, 2024

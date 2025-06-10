@@ -1,16 +1,24 @@
 'use client';
 
 import { PageLayout } from '@/components/layout/PageLayout';
+import { SimpleHero } from '@/components/layout/HeroSection';
 
 export default function CookiePolicyPage() {
   return (
     <PageLayout
       title='Cookie Policy - CariVet'
       description='Learn about how CariVet uses cookies and similar technologies to improve your browsing experience.'
+      noPadding
     >
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
-        <h1 className='text-4xl font-bold text-gray-900 mb-8'>Cookie Policy</h1>
+      {/* Hero Section */}
+      <SimpleHero
+        title='Cookie Policy'
+        subtitle='Understanding how we use cookies to improve your experience'
+        size='sm'
+        bgColor='bg-gray-800'
+      />
 
+      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
         <div className='prose prose-emerald max-w-none'>
           <p className='text-lg text-gray-600 mb-8'>
             Last updated: March 15, 2024

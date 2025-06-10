@@ -1,6 +1,7 @@
 'use client';
 
 import { HeroPageLayout } from '@/components/layout/PageLayout';
+import { SimpleHero } from '@/components/layout/HeroSection';
 import { PawPrint, Heart, Shield, Clock } from 'lucide-react';
 
 export default function PetCareTipsPage() {
@@ -8,16 +9,14 @@ export default function PetCareTipsPage() {
     <HeroPageLayout
       title='Pet Care Tips - CariVet'
       description='Essential pet care tips and advice to help you keep your furry friends healthy and happy.'
+      noPadding
     >
       {/* Hero Section */}
-      <section className='bg-emerald-600 text-white py-16'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h1 className='text-4xl font-bold mb-4'>Pet Care Tips</h1>
-          <p className='text-xl text-emerald-100'>
-            Essential advice for keeping your pets healthy and happy
-          </p>
-        </div>
-      </section>
+      <SimpleHero
+        title='Pet Care Tips'
+        subtitle='Essential advice for keeping your pets healthy and happy'
+        size='md'
+      />
 
       {/* Main Content */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>

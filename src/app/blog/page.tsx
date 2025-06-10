@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { BlogPost } from '@/lib/blog';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
+import { SimpleHero } from '@/components/layout/HeroSection';
 
 export default function VeterinaryBlogPage() {
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
@@ -129,16 +130,14 @@ export default function VeterinaryBlogPage() {
       error={error}
       onRetry={() => loadBlogPosts()}
       loadingVariant='skeleton'
+      noPadding
     >
       {/* Hero Section */}
-      <section className='bg-emerald-600 text-white py-16'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h1 className='text-4xl font-bold mb-4'>Veterinary Blog</h1>
-          <p className='text-xl text-emerald-100'>
-            Expert insights and advice on pet health, wellness, and care
-          </p>
-        </div>
-      </section>
+      <SimpleHero
+        title='Veterinary Blog'
+        subtitle='Expert insights and advice on pet health, wellness, and care'
+        size='md'
+      />
 
       {/* Main Content */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
@@ -257,37 +256,6 @@ export default function VeterinaryBlogPage() {
                   </article>
                 ))}
               </div>
-
-              {/* Pagination - Hidden for now, will add when there are more blog posts */}
-              {/* <div className='flex justify-center items-center gap-2'>
-                <button className='p-2 text-gray-400 hover:text-gray-600'>
-                  <ChevronLeft size={16} />
-                  <span className='sr-only'>Previous</span>
-                </button>
-                <span className='text-gray-500 text-sm'>Previous</span>
-
-                <div className='flex gap-1 mx-4'>
-                  {[1, 2, 3].map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded text-sm ${
-                        currentPage === page
-                          ? 'bg-emerald-600 text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-
-                <span className='text-gray-500 text-sm'>Next</span>
-                <button className='p-2 text-gray-600 hover:text-gray-800'>
-                  <ChevronRight size={16} />
-                  <span className='sr-only'>Next</span>
-                </button>
-              </div> */}
             </section>
           </div>
 

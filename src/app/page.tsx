@@ -19,16 +19,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
+import { HeroWithSearch } from '@/components/layout/HeroSection';
 
 export default function Home() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [heroFilters, setHeroFilters] = useState({
-    location: '',
-    service: '',
-    animalType: '',
-  });
 
   // Use our custom filter hook
   const { filterOptions } = useClinicFilters(clinics, '');
@@ -66,14 +62,14 @@ export default function Home() {
     loadClinics();
   }, [loadClinics]);
 
-  const handleHeroSearch = () => {
+  const handleHeroSearch = (searchData: any) => {
     const searchParams = new URLSearchParams();
 
-    if (heroFilters.location) {
-      searchParams.set('state', heroFilters.location);
+    if (searchData.location) {
+      searchParams.set('state', searchData.location);
     }
 
-    if (heroFilters.service) {
+    if (searchData.service) {
       // Map service names to match our filter system
       const serviceMap: { [key: string]: string } = {
         Vaccination: 'vaccination',
@@ -84,18 +80,18 @@ export default function Home() {
         'Pet Boarding': 'boarding',
       };
 
-      if (heroFilters.service === 'Emergency Care') {
+      if (searchData.service === 'Emergency Care') {
         searchParams.set('emergency', 'true');
       } else {
         const mappedService =
-          serviceMap[heroFilters.service] ||
-          heroFilters.service.toLowerCase().replace(' ', '-');
+          serviceMap[searchData.service] ||
+          searchData.service.toLowerCase().replace(' ', '-');
         searchParams.set('service', mappedService);
       }
     }
 
-    if (heroFilters.animalType) {
-      searchParams.set('animal', heroFilters.animalType.toLowerCase());
+    if (searchData.animalType) {
+      searchParams.set('animal', searchData.animalType.toLowerCase());
     }
 
     // Navigate to clinics page with filters
@@ -107,6 +103,46 @@ export default function Home() {
   // Get featured clinics (first 3 for display)
   const featuredClinics = clinics.slice(0, 3);
 
+  // Search configuration for hero
+  const searchConfig = {
+    filters: [
+      {
+        name: 'location',
+        label: 'Location',
+        options: filterOptions.states.map((state) => ({
+          value: state,
+          label: state,
+        })),
+      },
+      {
+        name: 'service',
+        label: 'Service',
+        options: [
+          { value: 'Vaccination', label: 'Vaccination' },
+          { value: 'Surgery', label: 'Surgery' },
+          { value: 'Dental Care', label: 'Dental Care' },
+          { value: 'Emergency Care', label: 'Emergency Care' },
+          { value: 'Pet Grooming', label: 'Pet Grooming' },
+          { value: 'Pet Boarding', label: 'Pet Boarding' },
+        ],
+      },
+      {
+        name: 'animalType',
+        label: 'Animal Type',
+        options: [
+          { value: 'Dogs', label: 'Dogs' },
+          { value: 'Cats', label: 'Cats' },
+          { value: 'Birds', label: 'Birds' },
+          { value: 'Rabbits', label: 'Rabbits' },
+          { value: 'Small Mammals', label: 'Small Mammals' },
+          { value: 'Exotic Pets', label: 'Exotic Pets' },
+        ],
+      },
+    ],
+    buttonText: 'Find Veterinary Clinics',
+    onSearch: handleHeroSearch,
+  };
+
   return (
     <HeroPageLayout
       title='CariVet - Find Veterinary Clinics in Malaysia'
@@ -116,94 +152,14 @@ export default function Home() {
       onRetry={loadClinics}
       noPadding // Hero pages often handle their own padding
     >
-      {/* Hero Section */}
-      <section className='bg-gradient-to-br from-emerald-500 to-emerald-600 text-white py-20'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h1 className='text-4xl md:text-5xl font-bold mb-6'>
-            Find the Best Veterinary Care in Malaysia
-          </h1>
-          <p className='text-xl mb-8 text-emerald-100'>
-            Locate trusted veterinary clinics for your pets with our
-            comprehensive directory
-          </p>
-
-          {/* Search Form */}
-          <div className='max-w-4xl mx-auto bg-white rounded-lg p-6 shadow-lg'>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Location
-                </label>
-                <select
-                  value={heroFilters.location}
-                  onChange={(e) =>
-                    setHeroFilters({ ...heroFilters, location: e.target.value })
-                  }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'
-                >
-                  <option value=''>All Locations</option>
-                  {filterOptions.states.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Service
-                </label>
-                <select
-                  value={heroFilters.service}
-                  onChange={(e) =>
-                    setHeroFilters({ ...heroFilters, service: e.target.value })
-                  }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'
-                >
-                  <option value=''>All Services</option>
-                  <option value='Vaccination'>Vaccination</option>
-                  <option value='Surgery'>Surgery</option>
-                  <option value='Dental Care'>Dental Care</option>
-                  <option value='Emergency Care'>Emergency Care</option>
-                  <option value='Pet Grooming'>Pet Grooming</option>
-                  <option value='Pet Boarding'>Pet Boarding</option>
-                </select>
-              </div>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Animal Type
-                </label>
-                <select
-                  value={heroFilters.animalType}
-                  onChange={(e) =>
-                    setHeroFilters({
-                      ...heroFilters,
-                      animalType: e.target.value,
-                    })
-                  }
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900'
-                >
-                  <option value=''>All Animals</option>
-                  <option value='Dogs'>Dogs</option>
-                  <option value='Cats'>Cats</option>
-                  <option value='Birds'>Birds</option>
-                  <option value='Rabbits'>Rabbits</option>
-                  <option value='Small Mammals'>Small Mammals</option>
-                  <option value='Exotic Pets'>Exotic Pets</option>
-                </select>
-              </div>
-            </div>
-            <div className='text-center'>
-              <button
-                onClick={handleHeroSearch}
-                className='bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 font-medium'
-              >
-                Find Veterinary Clinics
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section with Search */}
+      <HeroWithSearch
+        title='Find the Best Veterinary Care in Malaysia'
+        subtitle='Locate trusted veterinary clinics for your pets with our comprehensive directory'
+        variant='gradient'
+        size='lg'
+        searchConfig={searchConfig}
+      />
 
       {/* Featured Clinics Section */}
       <section className='py-16 bg-gray-50'>
