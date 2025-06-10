@@ -21,7 +21,7 @@ import {
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { HeroWithSearch } from '@/components/layout/HeroSection';
-import { LinkButton } from '@/components/ui/button';
+import { LinkButton, Button } from '@/components/ui/button';
 
 export default function Home() {
   const router = useRouter();
@@ -227,12 +227,17 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <Link
-                    href={`/clinic/${clinic.id}`}
-                    className='block w-full text-center bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 transition-colors mt-auto'
+                  <Button
+                    asChild
+                    variant='emerald'
+                    size='sm'
+                    fullWidth
+                    className='mt-auto'
                   >
-                    View Details
-                  </Link>
+                    <Link href={`/clinic/${clinic.id}`}>
+                      View Details
+                    </Link>
+                  </Button>
                 </div>
               </div>
             ))}

@@ -8,6 +8,7 @@ import {
   Heart,
   Wrench,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Filters {
   state: string;
@@ -80,21 +81,25 @@ export default function FilterPanel({
           </div>
           <div className='flex items-center gap-2'>
             {hasActiveFilters && (
-              <button
+              <Button
                 onClick={clearAllFilters}
-                className='text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1'
+                variant='ghost'
+                size='sm'
+                leftIcon={<X size={14} />}
+                className='text-gray-500 hover:text-gray-700'
               >
-                <X size={14} />
                 Clear all
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               onClick={() => setIsExpanded(!isExpanded)}
-              className='lg:hidden flex items-center gap-1 text-gray-500 hover:text-gray-700'
+              variant='ghost'
+              size='sm'
+              rightIcon={isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              className='lg:hidden text-gray-500 hover:text-gray-700'
             >
-              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               {isExpanded ? 'Hide' : 'Show'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

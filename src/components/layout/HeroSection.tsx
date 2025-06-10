@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
+import { SubmitButton } from '@/components/ui/button';
 
 interface HeroSectionProps {
   /** Main heading text */
@@ -257,12 +258,9 @@ export function HeroWithSearch({
               ))}
             </div>
             <div className='text-center'>
-              <button
-                type='submit'
-                className='bg-emerald-600 text-white px-8 py-3 rounded-md hover:bg-emerald-700 font-medium transition-colors'
-              >
+              <SubmitButton size='lg'>
                 {buttonText}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </div>

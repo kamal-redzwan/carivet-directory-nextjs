@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PawPrint, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
 
 interface NavItem {
   label: string;
@@ -123,14 +123,15 @@ export function Navbar({
           )}
 
           {/* Mobile Menu Button */}
-          <button
+          <IconButton
             onClick={() => setIsOpen(!isOpen)}
-            className='md:hidden p-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-100'
+            variant='ghost'
+            className='md:hidden text-gray-600 hover:bg-gray-100'
             aria-label='Toggle navigation menu'
             aria-expanded={isOpen}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          </IconButton>
         </div>
 
         {/* Mobile Navigation */}

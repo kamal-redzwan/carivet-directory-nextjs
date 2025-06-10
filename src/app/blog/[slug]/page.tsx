@@ -20,6 +20,7 @@ import { BlogPost } from '@/lib/blog';
 import { MDXComponents } from '@/components/MDXComponents';
 import { AsyncPageLayout } from '@/components/layout/PageLayout';
 import { SimpleHero } from '@/components/layout/HeroSection';
+import { Button } from '@/components/ui/button';
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -150,20 +151,23 @@ export default function BlogPostPage() {
                 <span className='text-sm font-medium text-gray-700'>
                   Share:
                 </span>
-                <button
+                <Button
                   onClick={() => handleShare('facebook')}
-                  className='flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors'
+                  variant='info'
+                  size='sm'
+                  leftIcon={<Facebook size={14} />}
+                  className='bg-blue-600 hover:bg-blue-700'
                 >
-                  <Facebook size={14} />
                   Facebook
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => handleShare('twitter')}
-                  className='flex items-center gap-2 px-3 py-2 bg-sky-500 text-white text-sm rounded hover:bg-sky-600 transition-colors'
+                  size='sm'
+                  leftIcon={<Twitter size={14} />}
+                  className='bg-sky-500 hover:bg-sky-600 text-white'
                 >
-                  <Twitter size={14} />
                   Twitter
-                </button>
+                </Button>
               </div>
 
               {/* Featured Image Placeholder */}
@@ -189,13 +193,16 @@ export default function BlogPostPage() {
                 <p className='text-gray-600 mb-4'>
                   Find trusted veterinary clinics across Malaysia
                 </p>
-                <Link
-                  href='/clinics'
-                  className='inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors'
+                <Button
+                  asChild
+                  variant='emerald'
+                  size='lg'
+                  rightIcon={<ChevronRight size={16} />}
                 >
-                  Find Veterinary Clinics
-                  <ChevronRight size={16} />
-                </Link>
+                  <Link href='/clinics'>
+                    Find Veterinary Clinics
+                  </Link>
+                </Button>
               </div>
             </article>
           </main>

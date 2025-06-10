@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+
 interface ClinicMapProps {
   clinicName: string;
   address: string;
@@ -74,14 +76,19 @@ export default function ClinicMap({
               <p className='text-gray-600 mb-4'>
                 {address}, {city}, {state}
               </p>
-              <a
-                href={mapUrl}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors'
+              <Button
+                asChild
+                variant='info'
+                size='sm'
               >
-                View on Google Maps
-              </a>
+                <a
+                  href={mapUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  View on Google Maps
+                </a>
+              </Button>
             </div>
           </div>
         )}
@@ -89,24 +96,31 @@ export default function ClinicMap({
 
       <div className='p-4 bg-gray-50'>
         <div className='flex gap-2'>
-          <a
-            href={mapUrl}
-            target='_blank'
-            rel='noopener noreferrer'
-            className='flex-1 text-center px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors'
+          <Button
+            asChild
+            variant='info'
+            size='sm'
+            className='flex-1'
           >
-            Get Directions
-          </a>
-          <button
+            <a
+              href={mapUrl}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              Get Directions
+            </a>
+          </Button>
+          <Button
             onClick={() => {
               const fullAddress = `${address}, ${city}, ${state}, Malaysia`;
               navigator.clipboard.writeText(fullAddress);
               alert('Address copied to clipboard!');
             }}
-            className='px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors'
+            variant='outline'
+            size='sm'
           >
             Copy Address
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from './button';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -73,22 +74,24 @@ export function ErrorDisplay({
         {/* Action Buttons */}
         <div className='flex flex-col sm:flex-row gap-3 justify-center'>
           {onReset && (
-            <button
+            <Button
               onClick={onReset}
-              className='inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors'
+              variant='emerald'
+              leftIcon={<RefreshCw size={16} />}
             >
-              <RefreshCw size={16} />
               Try Again
-            </button>
+            </Button>
           )}
 
-          <Link
-            href='/'
-            className='inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors'
+          <Button
+            asChild
+            variant='outline'
+            leftIcon={<Home size={16} />}
           >
-            <Home size={16} />
-            Go Home
-          </Link>
+            <Link href='/'>
+              Go Home
+            </Link>
+          </Button>
         </div>
 
         {/* Error Details (Development Only) */}
@@ -217,12 +220,13 @@ export const SimpleErrorFallback = ({
   <div className='p-4 border border-red-200 bg-red-50 rounded-lg'>
     <h3 className='text-red-800 font-medium mb-2'>Something went wrong</h3>
     <p className='text-red-700 text-sm mb-3'>{error.message}</p>
-    <button
+    <Button
       onClick={onReset}
-      className='text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700'
+      variant='destructive'
+      size='sm'
     >
       Try again
-    </button>
+    </Button>
   </div>
 );
 
