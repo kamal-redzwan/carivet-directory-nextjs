@@ -65,7 +65,7 @@ export default function BlogPostPage() {
     if (params.slug) {
       loadPost();
     }
-  }, [params.slug]);
+  }, [params.slug, loadPost]);
 
   const handleShare = (platform: string) => {
     if (!post) return;

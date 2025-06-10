@@ -66,7 +66,7 @@ export default function ClinicCard({ clinic }: ClinicCardProps) {
         clinic.hours[today as keyof typeof clinic.hours] ||
         'Hours not available'
       );
-    } catch (error) {
+    } catch {
       return 'Hours not available';
     }
   };
@@ -169,7 +169,7 @@ export default function ClinicCard({ clinic }: ClinicCardProps) {
               leftIcon={<Globe size={14} />}
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(clinic.website, '_blank', 'noopener,noreferrer');
+                window.open(clinic.website!, '_blank', 'noopener,noreferrer');
               }}
             >
               Website

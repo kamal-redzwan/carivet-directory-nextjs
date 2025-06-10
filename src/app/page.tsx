@@ -65,7 +65,7 @@ export default function Home() {
     loadClinics();
   }, [loadClinics]);
 
-  const handleHeroSearch = (searchData: any) => {
+  const handleHeroSearch = (searchData: Record<string, string>) => {
     const searchParams = new URLSearchParams();
 
     if (searchData.location) {

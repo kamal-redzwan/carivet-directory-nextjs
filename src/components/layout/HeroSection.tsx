@@ -210,7 +210,7 @@ interface HeroWithSearchProps extends Omit<HeroSectionProps, 'children'> {
     /** Search button text */
     buttonText?: string;
     /** Search handler */
-    onSearch: (searchData: any) => void;
+    onSearch: (searchData: Record<string, string>) => void;
   };
 }
 
@@ -219,7 +219,6 @@ export function HeroWithSearch({
   ...heroProps
 }: HeroWithSearchProps) {
   const {
-    placeholder,
     filters = [],
     buttonText = 'Search',
     onSearch,
@@ -233,8 +232,8 @@ export function HeroWithSearch({
             onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const searchData = Object.fromEntries(formData);
-              onSearch(searchData);
+              const searchData = Object.fromEntries(formData) as Record<string, string>;
+              onSearch?.(searchData);
             }}
           >
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>

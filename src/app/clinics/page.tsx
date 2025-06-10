@@ -89,7 +89,7 @@ export default function ClinicsPage() {
 
     // Update filters with URL parameters
     updateFilters(newFilters);
-  }, [searchParams]); // Only depend on searchParams
+  }, [searchParams, updateFilters]);
 
   async function loadClinics() {
     try {

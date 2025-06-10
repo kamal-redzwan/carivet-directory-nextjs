@@ -53,7 +53,7 @@ export async function generateMetadata({
         description,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Veterinary Clinic - CariVet',
       description:
