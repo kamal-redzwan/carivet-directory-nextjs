@@ -6,22 +6,12 @@ import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
 import { useClinicFilters } from '@/hooks/useClinicFilters';
 import { Clinic } from '@/types/clinic';
-import {
-  Search,
-  Clock,
-  Shield,
-  FileText,
-  Heart,
-  Scissors,
-  Stethoscope,
-  Syringe,
-  PawPrint,
-  ChevronRight,
-} from 'lucide-react';
+import { Search, Shield, FileText, PawPrint, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { HeroWithSearch } from '@/components/layout/HeroSection';
 import { LinkButton, Button } from '@/components/ui/button';
+import { SpecializedServicesSection } from '@/components/examples/ServiceFeatureExamples';
 
 export default function Home() {
   const router = useRouter();
@@ -234,9 +224,7 @@ export default function Home() {
                     fullWidth
                     className='mt-auto'
                   >
-                    <Link href={`/clinic/${clinic.id}`}>
-                      View Details
-                    </Link>
+                    <Link href={`/clinic/${clinic.id}`}>View Details</Link>
                   </Button>
                 </div>
               </div>
@@ -257,150 +245,7 @@ export default function Home() {
       </section>
 
       {/* Specialized Services Section */}
-      <section className='py-16 bg-white'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-4'>
-              Specialized Veterinary Services
-            </h2>
-            <p className='text-gray-600'>
-              Find clinics that offer specialized care for your pets&apos;
-              specific needs
-            </p>
-          </div>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {/* Emergency Care */}
-            <div className='text-center p-6'>
-              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Clock className='h-6 w-6 text-emerald-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Emergency Care
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                24/7 emergency veterinary services for urgent pet health issues
-              </p>
-              <LinkButton
-                size='default'
-                rightIcon={<ChevronRight size={14} />}
-                onClick={() => router.push('/clinics?emergency=true')}
-                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
-              >
-                Find clinics
-              </LinkButton>
-            </div>
-
-            {/* Surgery */}
-            <div className='text-center p-6'>
-              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Stethoscope className='h-6 w-6 text-emerald-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Surgery
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Advanced surgical procedures performed by experienced
-                veterinarians
-              </p>
-              <LinkButton
-                size='default'
-                rightIcon={<ChevronRight size={14} />}
-                onClick={() => router.push('/clinics?service=surgery')}
-                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
-              >
-                Find clinics
-              </LinkButton>
-            </div>
-
-            {/* Dental Care */}
-            <div className='text-center p-6'>
-              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Heart className='h-6 w-6 text-emerald-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Dental Care
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Comprehensive dental services to maintain your pet&apos;s oral
-                health
-              </p>
-              <LinkButton
-                size='default'
-                rightIcon={<ChevronRight size={14} />}
-                onClick={() => router.push('/clinics?service=dental-care')}
-                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
-              >
-                Find clinics
-              </LinkButton>
-            </div>
-
-            {/* Vaccination */}
-            <div className='text-center p-6'>
-              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Syringe className='h-6 w-6 text-emerald-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Vaccination
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Essential vaccinations to protect your pets from common diseases
-              </p>
-              <LinkButton
-                size='default'
-                rightIcon={<ChevronRight size={14} />}
-                onClick={() => router.push('/clinics?service=vaccination')}
-                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
-              >
-                Find clinics
-              </LinkButton>
-            </div>
-
-            {/* Exotic Pet Care */}
-            <div className='text-center p-6'>
-              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <PawPrint className='h-6 w-6 text-emerald-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Exotic Pet Care
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Specialized care for birds, reptiles, and other exotic pets
-              </p>
-              <LinkButton
-                size='default'
-                rightIcon={<ChevronRight size={14} />}
-                onClick={() => router.push('/clinics?service=exotic-pet-care')}
-                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
-              >
-                Find clinics
-              </LinkButton>
-            </div>
-
-            {/* Grooming */}
-            <div className='text-center p-6'>
-              <div className='w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <Scissors className='h-6 w-6 text-emerald-600' />
-              </div>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                Grooming
-              </h3>
-              <p className='text-gray-600 text-sm mb-4'>
-                Professional grooming services to keep your pets clean and
-                healthy
-              </p>
-              <LinkButton
-                size='default'
-                rightIcon={<ChevronRight size={14} />}
-                onClick={() => router.push('/clinics?service=grooming')}
-                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
-              >
-                Find clinics
-              </LinkButton>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SpecializedServicesSection />
 
       {/* Why Use CariVet Section */}
       <section className='py-16 bg-emerald-50'>
