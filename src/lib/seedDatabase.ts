@@ -27,17 +27,17 @@ export async function seedDatabase() {
       state: clinic.state,
       postcode: clinic.postcode,
       phone: clinic.phone,
-      email: clinic.email || null,
+      email: 'email' in clinic ? clinic.email : null,
       website: clinic.website || null,
       hours: clinic.hours,
       emergency: clinic.emergency,
-      emergency_hours: clinic.emergency_hours || null,
-      emergency_details: clinic.emergency_details || null,
+      emergency_hours: 'emergency_hours' in clinic ? clinic.emergency_hours : null,
+      emergency_details: 'emergency_details' in clinic ? clinic.emergency_details : null,
       animals_treated: clinic.animals_treated,
       specializations: clinic.specializations,
       services_offered: clinic.services_offered,
-      facebook_url: clinic.facebook_url || null,
-      instagram_url: clinic.instagram_url || null,
+      facebook_url: 'facebook_url' in clinic ? clinic.facebook_url : null,
+      instagram_url: 'instagram_url' in clinic ? clinic.instagram_url : null,
     }));
 
     // Insert the data

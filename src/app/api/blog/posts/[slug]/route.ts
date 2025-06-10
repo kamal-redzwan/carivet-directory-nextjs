@@ -3,17 +3,18 @@ import { getPostBySlug } from '@/lib/blog';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    console.log('API: Looking for post with slug:', params.slug);
+    const resolvedParams = await params;
+    console.log('API: Looking for post with slug:', resolvedParams.slug);
 
-    const post = getPostBySlug(params.slug);
+    const post = getPostBySlug(resolvedParams.slug);
 
     if (!post) {
-      console.log('API: Post not found for slug:', params.slug);
+      console.log('API: Post not found for slug:', resolvedParams.slug);
       return NextResponse.json(
-        { error: 'Post not found', slug: params.slug },
+        { error: 'Post not found', slug: resolvedParams.slug },
         { status: 404 }
       );
     }
