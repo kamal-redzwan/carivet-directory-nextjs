@@ -1,7 +1,9 @@
 'use client';
 
+import { PrimaryButton, SecondaryButton } from '@/components/ui/button';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { Heart, PawPrint, Users, Globe } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AboutCariVetPage() {
   return (
@@ -179,18 +181,16 @@ export default function AboutCariVetPage() {
             you to join our growing community.
           </p>
           <div className='flex justify-center gap-4'>
-            <a
-              href='/clinics'
-              className='bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors'
+            <PrimaryButton size='lg' asChild>
+              <Link href='/clinics'>Find a Clinic</Link>
+            </PrimaryButton>
+            <SecondaryButton
+              size='lg'
+              asChild
+              className='border-emerald-600 text-emerald-600 hover:bg-emerald-50'
             >
-              Find a Clinic
-            </a>
-            <a
-              href='/contact'
-              className='bg-white text-emerald-600 px-6 py-3 rounded-md border border-emerald-600 hover:bg-emerald-50 transition-colors'
-            >
-              Contact Us
-            </a>
+              <Link href='/contact'>Contact Us</Link>
+            </SecondaryButton>
           </div>
         </section>
       </main>

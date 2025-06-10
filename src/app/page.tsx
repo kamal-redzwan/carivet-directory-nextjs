@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation'; // Add this import
 import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
 import { useClinicFilters } from '@/hooks/useClinicFilters';
@@ -20,8 +21,10 @@ import {
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { HeroWithSearch } from '@/components/layout/HeroSection';
+import { LinkButton } from '@/components/ui/button';
 
 export default function Home() {
+  const router = useRouter();
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -236,13 +239,14 @@ export default function Home() {
           </div>
 
           <div className='text-center mt-8'>
-            <Link
-              href='/clinics'
-              className='inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium'
+            <LinkButton
+              size='lg'
+              rightIcon={<ChevronRight size={14} />}
+              onClick={() => router.push('/clinics')}
+              className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
             >
               View All Clinics
-              <ChevronRight size={16} className='ml-1' />
-            </Link>
+            </LinkButton>
           </div>
         </div>
       </section>
@@ -272,12 +276,14 @@ export default function Home() {
               <p className='text-gray-600 text-sm mb-4'>
                 24/7 emergency veterinary services for urgent pet health issues
               </p>
-              <Link
-                href='/clinics?emergency=true'
-                className='text-emerald-600 hover:text-emerald-700 text-sm font-medium cursor-pointer'
+              <LinkButton
+                size='default'
+                rightIcon={<ChevronRight size={14} />}
+                onClick={() => router.push('/clinics?emergency=true')}
+                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
               >
-                Find clinics →
-              </Link>
+                Find clinics
+              </LinkButton>
             </div>
 
             {/* Surgery */}
@@ -292,12 +298,14 @@ export default function Home() {
                 Advanced surgical procedures performed by experienced
                 veterinarians
               </p>
-              <Link
-                href='/clinics?service=surgery'
-                className='text-emerald-600 hover:text-emerald-700 text-sm font-medium cursor-pointer'
+              <LinkButton
+                size='default'
+                rightIcon={<ChevronRight size={14} />}
+                onClick={() => router.push('/clinics?service=surgery')}
+                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
               >
-                Find clinics →
-              </Link>
+                Find clinics
+              </LinkButton>
             </div>
 
             {/* Dental Care */}
@@ -312,12 +320,14 @@ export default function Home() {
                 Comprehensive dental services to maintain your pet&apos;s oral
                 health
               </p>
-              <Link
-                href='/clinics?service=dental-care'
-                className='text-emerald-600 hover:text-emerald-700 text-sm font-medium cursor-pointer'
+              <LinkButton
+                size='default'
+                rightIcon={<ChevronRight size={14} />}
+                onClick={() => router.push('/clinics?service=dental-care')}
+                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
               >
-                Find clinics →
-              </Link>
+                Find clinics
+              </LinkButton>
             </div>
 
             {/* Vaccination */}
@@ -331,12 +341,14 @@ export default function Home() {
               <p className='text-gray-600 text-sm mb-4'>
                 Essential vaccinations to protect your pets from common diseases
               </p>
-              <Link
-                href='/clinics?service=vaccination'
-                className='text-emerald-600 hover:text-emerald-700 text-sm font-medium cursor-pointer'
+              <LinkButton
+                size='default'
+                rightIcon={<ChevronRight size={14} />}
+                onClick={() => router.push('/clinics?service=vaccination')}
+                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
               >
-                Find clinics →
-              </Link>
+                Find clinics
+              </LinkButton>
             </div>
 
             {/* Exotic Pet Care */}
@@ -350,12 +362,14 @@ export default function Home() {
               <p className='text-gray-600 text-sm mb-4'>
                 Specialized care for birds, reptiles, and other exotic pets
               </p>
-              <Link
-                href='/clinics?service=exotic-pet-care'
-                className='text-emerald-600 hover:text-emerald-700 text-sm font-medium cursor-pointer'
+              <LinkButton
+                size='default'
+                rightIcon={<ChevronRight size={14} />}
+                onClick={() => router.push('/clinics?service=exotic-pet-care')}
+                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
               >
-                Find clinics →
-              </Link>
+                Find clinics
+              </LinkButton>
             </div>
 
             {/* Grooming */}
@@ -370,12 +384,14 @@ export default function Home() {
                 Professional grooming services to keep your pets clean and
                 healthy
               </p>
-              <Link
-                href='/clinics?service=grooming'
-                className='text-emerald-600 hover:text-emerald-700 text-sm font-medium cursor-pointer'
+              <LinkButton
+                size='default'
+                rightIcon={<ChevronRight size={14} />}
+                onClick={() => router.push('/clinics?service=grooming')}
+                className='text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer'
               >
-                Find clinics →
-              </Link>
+                Find clinics
+              </LinkButton>
             </div>
           </div>
         </div>

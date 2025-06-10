@@ -1,3 +1,4 @@
+// src/app/contact/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -5,6 +6,8 @@ import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { SimpleHero } from '@/components/layout/HeroSection';
+// Add this import for SubmitButton
+import { SubmitButton } from '@/components/ui/button';
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -16,6 +19,9 @@ export default function ContactUsPage() {
     message: '',
     agreeToPrivacy: false,
   });
+
+  // Add loading state for the submit button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -31,10 +37,24 @@ export default function ContactUsPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Updated submit handler with loading state
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Handle form submission here
+    setIsSubmitting(true);
+
+    try {
+      console.log('Form submitted:', formData);
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Handle form submission here
+      // You could show a success message here
+      alert('Message sent successfully!');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -204,13 +224,10 @@ export default function ContactUsPage() {
                 </label>
               </div>
 
-              {/* Submit Button */}
-              <button
-                type='submit'
-                className='w-full bg-emerald-600 text-white py-3 px-6 rounded-md hover:bg-emerald-700 transition-colors font-medium'
-              >
-                Send Message
-              </button>
+              {/* Submit Button - FIXED */}
+              <SubmitButton fullWidth size='lg' loading={isSubmitting}>
+                {isSubmitting ? 'Sending...' : 'Send Message'}
+              </SubmitButton>
             </form>
           </div>
 

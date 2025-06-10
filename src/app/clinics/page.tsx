@@ -10,6 +10,7 @@ import { PawPrint } from 'lucide-react';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { SimpleHero } from '@/components/layout/HeroSection';
+import { Button, PrimaryButton, SecondaryButton } from '@/components/ui/button';
 
 type FilterState = {
   state: string;
@@ -419,10 +420,9 @@ export default function ClinicsPage() {
 
               {/* Apply and Clear Buttons */}
               <div className='space-y-3'>
-                <button className='w-full bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700 font-medium'>
-                  Apply Filters
-                </button>
-                <button
+                <PrimaryButton fullWidth>Apply Filters</PrimaryButton>
+                <SecondaryButton
+                  fullWidth
                   onClick={() =>
                     updateFilters({
                       state: '',
@@ -432,10 +432,9 @@ export default function ClinicsPage() {
                       services: [],
                     })
                   }
-                  className='w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50'
                 >
                   Clear All Filters
-                </button>
+                </SecondaryButton>
               </div>
             </div>
           </div>
@@ -599,12 +598,15 @@ export default function ClinicsPage() {
                       )}
                     </div>
 
-                    <Link
-                      href={`/clinic/${clinic.id}`}
-                      className='block w-full text-center bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 transition-colors text-sm mt-auto'
+                    <Button
+                      asChild
+                      variant='emerald'
+                      size='sm'
+                      fullWidth
+                      className='mt-auto'
                     >
-                      View Details
-                    </Link>
+                      <Link href={`/clinic/${clinic.id}`}>View Details</Link>
+                    </Button>
                   </div>
                 </div>
               ))}

@@ -1,4 +1,5 @@
 import { Phone, Globe, MapPin, Clock, AlertCircle } from 'lucide-react';
+import { Button, SecondaryButton } from '@/components/ui/button';
 import Link from 'next/link';
 
 interface ClinicCardProps {
@@ -150,34 +151,39 @@ export default function ClinicCard({ clinic }: ClinicCardProps) {
       {/* Non-clickable actions area */}
       <div className='px-6 pb-6'>
         <div className='flex gap-2 pt-3 border-t border-gray-100'>
-          <a
-            href={`tel:${clinic.phone}`}
-            onClick={(e) => e.stopPropagation()}
-            className='flex items-center gap-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors'
+          <Button
+            variant='info'
+            size='sm'
+            leftIcon={<Phone size={14} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(`tel:${clinic.phone}`);
+            }}
           >
-            <Phone size={14} />
             Call
-          </a>
+          </Button>
 
           {clinic.website && (
-            <a
-              href={clinic.website}
-              target='_blank'
-              rel='noopener noreferrer'
-              onClick={(e) => e.stopPropagation()}
-              className='flex items-center gap-1 px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors'
+            <SecondaryButton
+              size='sm'
+              leftIcon={<Globe size={14} />}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(clinic.website, '_blank', 'noopener,noreferrer');
+              }}
             >
-              <Globe size={14} />
               Website
-            </a>
+            </SecondaryButton>
           )}
 
-          <Link
-            href={`/clinic/${clinic.id}`}
-            className='flex items-center gap-1 px-3 py-2 border border-blue-300 text-blue-700 text-sm rounded hover:bg-blue-50 transition-colors ml-auto'
+          <Button
+            asChild
+            variant='outline'
+            size='sm'
+            className='ml-auto border-blue-300 text-blue-700 hover:bg-blue-50'
           >
-            View Details
-          </Link>
+            <Link href={`/clinic/${clinic.id}`}>View Details</Link>
+          </Button>
         </div>
       </div>
     </div>
