@@ -6,8 +6,8 @@ import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { SimpleHero } from '@/components/layout/HeroSection';
-// Add this import for SubmitButton
 import { SubmitButton } from '@/components/ui/button';
+import { FormLoading } from '@/components/ui/LoadingComponents';
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -20,8 +20,10 @@ export default function ContactUsPage() {
     agreeToPrivacy: false,
   });
 
-  // Add loading state for the submit button
+  // Add form states
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -37,21 +39,35 @@ export default function ContactUsPage() {
     }
   };
 
-  // Updated submit handler with loading state
+  // Enhanced submit handler with form states
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
 
     try {
       console.log('Form submitted:', formData);
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      // Handle form submission here
-      // You could show a success message here
-      alert('Message sent successfully!');
+      
+      // Reset form on success
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
+        agreeToPrivacy: false,
+      });
+      setSubmitSuccess(true);
+      
+      // Reset success message after 5 seconds
+      setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Failed to send message. Please try again.');
+      setSubmitError('Failed to send message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -224,10 +240,18 @@ export default function ContactUsPage() {
                 </label>
               </div>
 
-              {/* Submit Button - FIXED */}
+              {/* Submit Button */}
               <SubmitButton fullWidth size='lg' loading={isSubmitting}>
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </SubmitButton>
+
+              {/* Form Loading States */}
+              <FormLoading
+                loading={isSubmitting}
+                success={submitSuccess}
+                error={submitError}
+                successMessage="Message sent successfully! We'll get back to you soon."
+              />
             </form>
           </div>
 
