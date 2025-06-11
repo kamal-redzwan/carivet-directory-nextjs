@@ -16,6 +16,7 @@ import {
   XCircle,
   Clock,
   MapPin,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,123 +30,73 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/ui/loading';
+import { supabase } from '@/lib/supabase';
+import { Clinic } from '@/types/clinic';
+import Link from 'next/link';
 
-interface Clinic {
-  id: string;
-  name: string;
-  street: string;
-  city: string;
-  state: string;
-  phone: string;
-  email?: string;
-  website?: string;
-  emergency: boolean;
-  verification_status: 'pending' | 'verified' | 'rejected';
-  created_at: string;
-  updated_at: string;
+interface ClinicWithStatus extends Clinic {
+  verification_status?: 'pending' | 'verified' | 'rejected';
 }
 
 export default function AdminClinicsPage() {
-  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [clinics, setClinics] = useState<ClinicWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stateFilter, setStateFilter] = useState('all');
   const [selectedClinics, setSelectedClinics] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual API calls
+  // Load clinics from Supabase
   useEffect(() => {
-    const fetchClinics = async () => {
-      setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        const mockClinics: Clinic[] = [
-          {
-            id: '1',
-            name: 'Animal Medical Centre Sdn Bhd (AMC)',
-            street: 'Wisma Medivet, 8, Jln Tun Razak',
-            city: 'Kuala Lumpur',
-            state: 'Kuala Lumpur',
-            phone: '+60340426742',
-            email: 'info@amc.com.my',
-            website: 'https://animalhospital.com.my',
-            emergency: true,
-            verification_status: 'verified',
-            created_at: '2024-01-15T10:30:00Z',
-            updated_at: '2024-02-01T14:20:00Z',
-          },
-          {
-            id: '2',
-            name: 'Petcare Enterprise Sdn Bhd',
-            street: '9145 & 9146, Jalan Bandar 4',
-            city: 'Taman Melawati',
-            state: 'Selangor',
-            phone: '+60341067515',
-            website: 'https://petcare.com.my/',
-            emergency: false,
-            verification_status: 'pending',
-            created_at: '2024-02-10T09:15:00Z',
-            updated_at: '2024-02-10T09:15:00Z',
-          },
-          {
-            id: '3',
-            name: 'Happy Tails Veterinary Clinic',
-            street: '60G, Jalan SS 2/64, Ss 2',
-            city: 'Petaling Jaya',
-            state: 'Selangor',
-            phone: '+60378742773',
-            emergency: false,
-            verification_status: 'rejected',
-            created_at: '2024-01-28T16:45:00Z',
-            updated_at: '2024-02-05T11:30:00Z',
-          },
-          {
-            id: '4',
-            name: 'VetCare Animal Hospital',
-            street: '32, Jalan Dato Sulaiman',
-            city: 'Johor Bahru',
-            state: 'Johor',
-            phone: '+60127723330',
-            emergency: true,
-            verification_status: 'verified',
-            created_at: '2024-01-20T08:00:00Z',
-            updated_at: '2024-01-25T12:00:00Z',
-          },
-          {
-            id: '5',
-            name: 'CityVet Bangsar',
-            street: '18, Jalan Telawi 3',
-            city: 'Kuala Lumpur',
-            state: 'Kuala Lumpur',
-            phone: '+60322827668',
-            emergency: false,
-            verification_status: 'pending',
-            created_at: '2024-02-15T14:30:00Z',
-            updated_at: '2024-02-15T14:30:00Z',
-          },
-        ];
-        setClinics(mockClinics);
-        setLoading(false);
-      }, 1000);
-    };
-
-    fetchClinics();
+    loadClinics();
   }, []);
+
+  const loadClinics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+
+      setClinics(data || []);
+    } catch (err) {
+      console.error('Error loading clinics:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load clinics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get unique states for filter
+  const uniqueStates = [...new Set(clinics.map((c) => c.state))]
+    .filter(Boolean)
+    .sort();
 
   const filteredClinics = clinics.filter((clinic) => {
     const matchesSearch =
       clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       clinic.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       clinic.state.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus =
-      statusFilter === 'all' || clinic.verification_status === statusFilter;
+      statusFilter === 'all' ||
+      (clinic.verification_status || 'verified') === statusFilter;
+
     const matchesState = stateFilter === 'all' || clinic.state === stateFilter;
 
     return matchesSearch && matchesStatus && matchesState;
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (status: string | undefined) => {
+    const actualStatus = status || 'verified';
+
+    switch (actualStatus) {
       case 'verified':
         return (
           <Badge
@@ -197,14 +148,57 @@ export default function AdminClinicsPage() {
     }
   };
 
+  const handleDelete = async (clinicId: string, clinicName: string) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${clinicName}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clinics')
+        .delete()
+        .eq('id', clinicId);
+
+      if (error) throw error;
+
+      // Reload clinics after deletion
+      await loadClinics();
+    } catch (err) {
+      console.error('Error deleting clinic:', err);
+      alert('Failed to delete clinic');
+    }
+  };
+
   // Calculate stats
   const stats = {
     total: clinics.length,
-    verified: clinics.filter((c) => c.verification_status === 'verified')
-      .length,
-    pending: clinics.filter((c) => c.verification_status === 'pending').length,
+    verified: clinics.filter(
+      (c) => (c.verification_status || 'verified') === 'verified'
+    ).length,
+    pending: clinics.filter(
+      (c) => (c.verification_status || 'verified') === 'pending'
+    ).length,
     emergency: clinics.filter((c) => c.emergency).length,
   };
+
+  if (error) {
+    return (
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <div className='text-center'>
+          <AlertCircle className='h-12 w-12 text-red-500 mx-auto mb-4' />
+          <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+            Error Loading Clinics
+          </h3>
+          <p className='text-gray-600 mb-4'>{error}</p>
+          <Button onClick={loadClinics}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-6'>
@@ -227,14 +221,21 @@ export default function AdminClinicsPage() {
             <Upload size={16} className='mr-2' />
             Import
           </Button>
-          <Button size='sm' className='bg-emerald-600 hover:bg-emerald-700'>
-            <Plus size={16} className='mr-2' />
-            Add Clinic
+          <Button
+            size='sm'
+            className='bg-emerald-600 hover:bg-emerald-700'
+            asChild
+          >
+            <Link href='/admin/clinics/new'>
+              <Plus size={16} className='mr-2' />
+              Add Clinic
+            </Link>
           </Button>
         </div>
       </div>
+
       {/* Stats Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-6'>
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
         <Card>
           <CardContent className='p-6'>
             <div className='flex items-center justify-between'>
@@ -250,7 +251,6 @@ export default function AdminClinicsPage() {
                 <MapPin className='w-6 h-6 text-blue-600' />
               </div>
             </div>
-            <p className='text-xs text-green-600 mt-2'>+12% from last month</p>
           </CardContent>
         </Card>
 
@@ -268,8 +268,10 @@ export default function AdminClinicsPage() {
               </div>
             </div>
             <p className='text-xs text-gray-500 mt-2'>
-              {Math.round((stats.verified / stats.total) * 100)}% verification
-              rate
+              {stats.total > 0
+                ? Math.round((stats.verified / stats.total) * 100)
+                : 0}
+              % verification rate
             </p>
           </CardContent>
         </Card>
@@ -310,7 +312,7 @@ export default function AdminClinicsPage() {
       </div>
 
       {/* Filters and Search */}
-      <Card className='mb-6'>
+      <Card>
         <CardHeader>
           <CardTitle className='text-lg'>Filters</CardTitle>
         </CardHeader>
@@ -344,10 +346,11 @@ export default function AdminClinicsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='all'>All States</SelectItem>
-                <SelectItem value='Kuala Lumpur'>Kuala Lumpur</SelectItem>
-                <SelectItem value='Selangor'>Selangor</SelectItem>
-                <SelectItem value='Johor'>Johor</SelectItem>
-                <SelectItem value='Penang'>Penang</SelectItem>
+                {uniqueStates.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -378,49 +381,188 @@ export default function AdminClinicsPage() {
             </div>
           ) : (
             <div className='space-y-4'>
-              {/* Table Header */}
-              <div className='flex items-center py-3 px-4 bg-gray-50 rounded-lg font-medium text-sm text-gray-600'>
-                <div className='w-8'>
-                  <input
-                    type='checkbox'
-                    checked={
-                      selectedClinics.length === filteredClinics.length &&
-                      filteredClinics.length > 0
-                    }
-                    onChange={handleSelectAll}
-                    className='rounded border-gray-300'
-                  />
-                </div>
-                <div className='flex-1'>Clinic Name</div>
-                <div className='w-48'>Location</div>
-                <div className='w-32'>Status</div>
-                <div className='w-32'>Emergency</div>
-                <div className='w-32 text-center'>Actions</div>
-              </div>
-
-              {/* Table Rows */}
-              {filteredClinics.map((clinic) => (
-                <div
-                  key={clinic.id}
-                  className='flex items-center py-4 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors'
-                >
-                  <div className='w-8'>
+              {/* Desktop Table View */}
+              <div className='hidden lg:block'>
+                {/* Table Header */}
+                <div className='grid grid-cols-12 gap-4 py-3 px-4 bg-gray-50 rounded-lg font-medium text-sm text-gray-600 mb-2'>
+                  <div className='col-span-1 flex items-center'>
                     <input
                       type='checkbox'
-                      checked={selectedClinics.includes(clinic.id)}
-                      onChange={() => handleSelectClinic(clinic.id)}
+                      checked={
+                        selectedClinics.length === filteredClinics.length &&
+                        filteredClinics.length > 0
+                      }
+                      onChange={handleSelectAll}
                       className='rounded border-gray-300'
                     />
                   </div>
-                  <div className='flex-1'>
-                    <div className='font-medium text-gray-900'>
-                      {clinic.name}
+                  <div className='col-span-4'>Clinic Name</div>
+                  <div className='col-span-2'>Location</div>
+                  <div className='col-span-1'>Status</div>
+                  <div className='col-span-1'>Emergency</div>
+                  <div className='col-span-3 text-center'>Actions</div>
+                </div>
+
+                {/* Table Rows */}
+                {filteredClinics.map((clinic) => (
+                  <div
+                    key={clinic.id}
+                    className='grid grid-cols-12 gap-4 py-4 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors mb-2 items-center'
+                  >
+                    <div className='col-span-1'>
+                      <input
+                        type='checkbox'
+                        checked={selectedClinics.includes(clinic.id)}
+                        onChange={() => handleSelectClinic(clinic.id)}
+                        className='rounded border-gray-300'
+                      />
                     </div>
-                    <div className='text-sm text-gray-600 flex items-center gap-4 mt-1'>
-                      <span className='flex items-center gap-1'>
-                        <Phone size={12} />
-                        {clinic.phone}
-                      </span>
+
+                    <div className='col-span-4'>
+                      <div className='font-medium text-gray-900 mb-1'>
+                        {clinic.name}
+                      </div>
+                      <div className='text-sm text-gray-600 flex items-center gap-3'>
+                        {clinic.phone && (
+                          <span className='flex items-center gap-1'>
+                            <Phone size={12} />
+                            {clinic.phone}
+                          </span>
+                        )}
+                        {clinic.website && (
+                          <span className='flex items-center gap-1'>
+                            <Globe size={12} />
+                            <a
+                              href={clinic.website}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='text-blue-600 hover:underline'
+                            >
+                              Website
+                            </a>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className='col-span-2'>
+                      <div className='text-sm text-gray-900'>{clinic.city}</div>
+                      <div className='text-xs text-gray-600'>
+                        {clinic.state}
+                      </div>
+                    </div>
+
+                    <div className='col-span-1'>
+                      {getStatusBadge(clinic.verification_status)}
+                    </div>
+
+                    <div className='col-span-1'>
+                      {clinic.emergency ? (
+                        <Badge
+                          variant='destructive'
+                          className='bg-red-100 text-red-800 border-red-200'
+                        >
+                          <AlertCircle size={12} className='mr-1' />
+                          24/7
+                        </Badge>
+                      ) : (
+                        <Badge variant='outline'>Regular</Badge>
+                      )}
+                    </div>
+
+                    <div className='col-span-3'>
+                      <div className='flex items-center justify-center gap-1'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          title='View Details'
+                          asChild
+                        >
+                          <Link href={`/admin/clinics/${clinic.id}`}>
+                            <Eye size={14} />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          title='Edit Clinic'
+                          asChild
+                        >
+                          <Link href={`/admin/clinics/${clinic.id}/edit`}>
+                            <Edit size={14} />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          title='View Public Page'
+                          asChild
+                        >
+                          <Link href={`/clinic/${clinic.id}`} target='_blank'>
+                            <ExternalLink size={14} />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='text-red-600 hover:text-red-800'
+                          title='Delete Clinic'
+                          onClick={() => handleDelete(clinic.id, clinic.name)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile/Tablet Card View */}
+              <div className='lg:hidden space-y-4'>
+                {filteredClinics.map((clinic) => (
+                  <div
+                    key={clinic.id}
+                    className='border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors'
+                  >
+                    <div className='flex items-start justify-between mb-3'>
+                      <div className='flex-1'>
+                        <h3 className='font-medium text-gray-900 mb-1'>
+                          {clinic.name}
+                        </h3>
+                        <p className='text-sm text-gray-600'>
+                          {clinic.city}, {clinic.state}
+                        </p>
+                      </div>
+                      <input
+                        type='checkbox'
+                        checked={selectedClinics.includes(clinic.id)}
+                        onChange={() => handleSelectClinic(clinic.id)}
+                        className='rounded border-gray-300 mt-1'
+                      />
+                    </div>
+
+                    <div className='flex flex-wrap gap-2 mb-3'>
+                      {getStatusBadge(clinic.verification_status)}
+                      {clinic.emergency ? (
+                        <Badge
+                          variant='destructive'
+                          className='bg-red-100 text-red-800 border-red-200'
+                        >
+                          <AlertCircle size={12} className='mr-1' />
+                          24/7
+                        </Badge>
+                      ) : (
+                        <Badge variant='outline'>Regular</Badge>
+                      )}
+                    </div>
+
+                    <div className='flex items-center gap-2 mb-3 text-sm text-gray-600'>
+                      {clinic.phone && (
+                        <span className='flex items-center gap-1'>
+                          <Phone size={12} />
+                          {clinic.phone}
+                        </span>
+                      )}
                       {clinic.website && (
                         <span className='flex items-center gap-1'>
                           <Globe size={12} />
@@ -435,47 +577,51 @@ export default function AdminClinicsPage() {
                         </span>
                       )}
                     </div>
-                  </div>
-                  <div className='w-48'>
-                    <div className='text-sm text-gray-900'>{clinic.city}</div>
-                    <div className='text-xs text-gray-600'>{clinic.state}</div>
-                  </div>
-                  <div className='w-32'>
-                    {getStatusBadge(clinic.verification_status)}
-                  </div>
-                  <div className='w-32'>
-                    {clinic.emergency ? (
-                      <Badge
-                        variant='destructive'
-                        className='bg-red-100 text-red-800 border-red-200'
+
+                    <div className='flex items-center gap-1 pt-3 border-t border-gray-100'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        title='View Details'
+                        asChild
                       >
-                        <AlertCircle size={12} className='mr-1' />
-                        24/7
-                      </Badge>
-                    ) : (
-                      <Badge variant='outline'>Regular</Badge>
-                    )}
-                  </div>
-                  <div className='w-32'>
-                    <div className='flex items-center justify-center gap-1'>
-                      <Button variant='ghost' size='sm' title='View Details'>
-                        <Eye size={14} />
+                        <Link href={`/admin/clinics/${clinic.id}`}>
+                          <Eye size={14} />
+                        </Link>
                       </Button>
-                      <Button variant='ghost' size='sm' title='Edit Clinic'>
-                        <Edit size={14} />
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        title='Edit Clinic'
+                        asChild
+                      >
+                        <Link href={`/admin/clinics/${clinic.id}/edit`}>
+                          <Edit size={14} />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        title='View Public Page'
+                        asChild
+                      >
+                        <Link href={`/clinic/${clinic.id}`} target='_blank'>
+                          <ExternalLink size={14} />
+                        </Link>
                       </Button>
                       <Button
                         variant='ghost'
                         size='sm'
                         className='text-red-600 hover:text-red-800'
                         title='Delete Clinic'
+                        onClick={() => handleDelete(clinic.id, clinic.name)}
                       >
                         <Trash2 size={14} />
                       </Button>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
               {filteredClinics.length === 0 && !loading && (
                 <div className='text-center py-12'>
