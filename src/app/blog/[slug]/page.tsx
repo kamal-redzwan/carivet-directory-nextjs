@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
@@ -31,12 +31,12 @@ export default function BlogPostPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadPost = async () => {
+  const loadPost = useCallback(async (slug: string) => {
     try {
       setLoading(true);
-      console.log('Loading post with slug:', params.slug);
+      console.log('Loading post with slug:', slug);
 
-      const response = await fetch(`/api/blog/posts/${params.slug}`);
+      const response = await fetch(`/api/blog/posts/${slug}`);
       console.log('API response status:', response.status);
 
       if (!response.ok) {
@@ -60,11 +60,11 @@ export default function BlogPostPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (params.slug) {
-      loadPost();
+      loadPost(params.slug as string);
     }
   }, [params.slug, loadPost]);
 
@@ -104,7 +104,7 @@ export default function BlogPostPage() {
       error={error}
       onRetry={() => {
         if (params.slug) {
-          loadPost();
+          loadPost(params.slug as string);
         }
       }}
     >
@@ -199,9 +199,7 @@ export default function BlogPostPage() {
                   size='lg'
                   rightIcon={<ChevronRight size={16} />}
                 >
-                  <Link href='/clinics'>
-                    Find Veterinary Clinics
-                  </Link>
+                  <Link href='/clinics'>Find Veterinary Clinics</Link>
                 </Button>
               </div>
             </article>
