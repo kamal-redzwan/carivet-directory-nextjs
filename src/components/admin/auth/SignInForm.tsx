@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { Shield, Mail, Lock, AlertCircle } from 'lucide-react';
-import { SimpleAuthService } from '@/lib/auth-simple';
 
 interface FormData {
   email: string;
@@ -37,29 +36,18 @@ export function SignInForm() {
     setLoading(true);
 
     try {
-      const result = await SimpleAuthService.signIn(
-        formData.email,
-        formData.password
-      );
+      const result = await signIn(formData.email, formData.password);
 
       if (result.error) {
         setError(result.error);
-      } else if (result.user) {
-        // Test admin user check
-        const adminCheck = await SimpleAuthService.checkAdminUser(
-          result.user.id
-        );
-        console.log('Admin check:', adminCheck);
-
-        if (adminCheck.data) {
-          router.push('/admin/dashboard');
-        } else {
-          setError('No admin access found');
-        }
+      } else {
+        router.push('/admin/dashboard');
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Sign in failed';
+        err instanceof Error
+          ? err.message
+          : 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
     } finally {
       setLoading(false);
