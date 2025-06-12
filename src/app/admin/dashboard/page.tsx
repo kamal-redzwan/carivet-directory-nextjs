@@ -2,8 +2,9 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatsCard } from '@/components/data/StatsCard';
 import { Users, Building, FileText, Activity } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { supabase } from '@/lib/supabase';
 
 interface DashboardStats {
@@ -15,51 +16,69 @@ interface DashboardStats {
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalClinics: 0,
-    totalAdminUsers: 0,
-    pendingVerifications: 0,
-    recentActivity: 0,
-  });
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboardStats();
-  }, []);
-
-  const loadDashboardStats = async () => {
-    try {
+  // Load dashboard stats using the custom hook
+  const {
+    data: stats,
+    loading,
+    error,
+    refetch,
+  } = useSupabaseQuery<DashboardStats>(
+    async () => {
       // Get total clinics
-      const { count: clinicsCount } = await supabase
+      const { count: clinicsCount, error: clinicsError } = await supabase
         .from('clinics')
         .select('*', { count: 'exact', head: true });
 
+      if (clinicsError) throw clinicsError;
+
       // Get total admin users
-      const { count: adminUsersCount } = await supabase
+      const { count: adminUsersCount, error: adminError } = await supabase
         .from('admin_users')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
-      // Get pending verifications (if verification status exists)
-      const { count: pendingCount } = await supabase
+      if (adminError) throw adminError;
+
+      // Get pending verifications
+      const { count: pendingCount, error: pendingError } = await supabase
         .from('clinics')
         .select('*', { count: 'exact', head: true })
         .eq('verification_status', 'pending');
 
-      setStats({
-        totalClinics: clinicsCount || 0,
-        totalAdminUsers: adminUsersCount || 0,
-        pendingVerifications: pendingCount || 0,
-        recentActivity: 0, // Placeholder for now
-      });
-    } catch (error) {
-      console.error('Error loading dashboard stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (pendingError) throw pendingError;
+
+      return {
+        data: {
+          totalClinics: clinicsCount || 0,
+          totalAdminUsers: adminUsersCount || 0,
+          pendingVerifications: pendingCount || 0,
+          recentActivity: 0, // Placeholder for now
+        },
+        error: null,
+      };
+    },
+    [], // No dependencies - load once on mount
+    { enabled: !!user, refetchOnMount: true }
+  );
 
   if (!user) return null;
+
+  if (error) {
+    return (
+      <div className='space-y-6'>
+        <div className='text-center py-12'>
+          <p className='text-red-600 mb-4'>Error loading dashboard: {error}</p>
+          <button
+            onClick={refetch}
+            className='px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700'
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-8'>
@@ -69,73 +88,47 @@ export default function AdminDashboardPage() {
           Welcome back, {user.user.email.split('@')[0]}!
         </h1>
         <p className='text-gray-600'>
-          You&apos;re logged in as {user.role.display_name}
+          You're logged in as {user.role.display_name}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Clinics</CardTitle>
-            <Building className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {loading ? '...' : stats.totalClinics}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              Active veterinary clinics
-            </p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title='Total Clinics'
+          value={stats?.totalClinics || 0}
+          subtitle='Active veterinary clinics'
+          icon={Building}
+          iconColor='blue'
+          loading={loading}
+        />
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Admin Users</CardTitle>
-            <Users className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {loading ? '...' : stats.totalAdminUsers}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              Active admin accounts
-            </p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title='Admin Users'
+          value={stats?.totalAdminUsers || 0}
+          subtitle='Active admin accounts'
+          icon={Users}
+          iconColor='green'
+          loading={loading}
+        />
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Pending Reviews
-            </CardTitle>
-            <FileText className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {loading ? '...' : stats.pendingVerifications}
-            </div>
-            <p className='text-xs text-muted-foreground'>
-              Awaiting verification
-            </p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title='Pending Reviews'
+          value={stats?.pendingVerifications || 0}
+          subtitle='Awaiting verification'
+          icon={FileText}
+          iconColor='yellow'
+          loading={loading}
+        />
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Recent Activity
-            </CardTitle>
-            <Activity className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {loading ? '...' : stats.recentActivity}
-            </div>
-            <p className='text-xs text-muted-foreground'>Actions this week</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title='Recent Activity'
+          value={stats?.recentActivity || 0}
+          subtitle='Actions this week'
+          icon={Activity}
+          iconColor='purple'
+          loading={loading}
+        />
       </div>
 
       {/* Quick Actions */}

@@ -1,16 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { seedDatabase } from '@/lib/seedDatabase';
 import { useClinicFilters } from '@/hooks/useClinicFilters';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useSupabaseMutation } from '@/hooks/useSupabaseMutation';
 import { Clinic } from '@/types/clinic';
-import { PawPrint } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { SimpleHero } from '@/components/layout/HeroSection';
-import { Button, PrimaryButton, SecondaryButton } from '@/components/ui/button';
+import { SearchHeader } from '@/components/data/SearchHeader';
+import { FilterPanel } from '@/components/data/FilterPanel';
+import { DataTable } from '@/components/data/DataTable';
+import { StatusBadge } from '@/components/common/StatusBadge';
+import { ClinicContactInfo } from '@/components/common/ClinicContactInfo';
+import { Button } from '@/components/ui/button';
 
 type FilterState = {
   state: string;
@@ -21,79 +27,19 @@ type FilterState = {
 };
 
 export default function ClinicsPage() {
-  const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('name');
+  const [showFilters, setShowFilters] = useState(false);
   const searchParams = useSearchParams();
 
-  // Use our custom filter hook
-  const { filters, updateFilters, filteredClinics, filterOptions } =
-    useClinicFilters(clinics, '');
-
-  // Load clinics from Supabase
-  useEffect(() => {
-    loadClinics();
-  }, []);
-
-  // Apply URL parameters to filters
-  useEffect(() => {
-    const emergency = searchParams.get('emergency');
-    const service = searchParams.get('service');
-    const state = searchParams.get('state');
-    const animal = searchParams.get('animal');
-
-    // Only update if we have URL parameters
-    if (!emergency && !service && !state && !animal) {
-      return;
-    }
-
-    // Create new filters object with default values
-    const newFilters: FilterState = {
-      state: state || '',
-      city: '',
-      emergency: emergency === 'true',
-      animalTypes: [],
-      services: [],
-    };
-
-    if (service) {
-      // Convert service parameter to match our data
-      const serviceMap: { [key: string]: string } = {
-        surgery: 'Surgery',
-        'dental-care': 'Dentistry',
-        vaccination: 'Vaccination',
-        'emergency-care': 'Emergency Services',
-        grooming: 'Pet Grooming',
-        boarding: 'Pet Boarding',
-      };
-
-      const mappedService = serviceMap[service] || service;
-      newFilters.services = [mappedService];
-    }
-
-    if (animal) {
-      const animalMap: { [key: string]: string } = {
-        dogs: 'dogs',
-        cats: 'cats',
-        birds: 'birds',
-        rabbits: 'rabbits',
-        'small mammals': 'small mammals',
-        'exotic pets': 'exotic pets',
-      };
-
-      const mappedAnimal =
-        animalMap[animal.toLowerCase()] || animal.toLowerCase();
-      newFilters.animalTypes = [mappedAnimal];
-    }
-
-    // Update filters with URL parameters
-    updateFilters(newFilters);
-  }, [searchParams, updateFilters]);
-
-  async function loadClinics() {
-    try {
-      setLoading(true);
+  // Load clinics using useSupabaseQuery
+  const {
+    data: clinics,
+    loading,
+    error,
+    refetch: loadClinics,
+  } = useSupabaseQuery<Clinic[]>(
+    async () => {
+      // Seed database first
       await seedDatabase();
 
       const { data, error } = await supabase
@@ -101,34 +47,206 @@ export default function ClinicsPage() {
         .select('*')
         .order('name');
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      setClinics(data || []);
-    } catch (error) {
-      console.error('Error loading clinics:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to load clinics'
-      );
-    } finally {
-      setLoading(false);
+      return { data: data || [], error: null };
+    },
+    [], // No dependencies - load once
+    { enabled: true, refetchOnMount: true }
+  );
+
+  // Delete clinic mutation
+  const deleteMutation = useSupabaseMutation<void, string>(
+    async (clinicId: string) => {
+      const { error } = await supabase
+        .from('clinics')
+        .delete()
+        .eq('id', clinicId);
+
+      if (error) throw error;
+
+      return { data: null, error: null };
     }
-  }
+  );
+
+  // Use our custom filter hook
+  const { filters, updateFilters, filteredClinics, filterOptions } =
+    useClinicFilters(clinics || [], '');
+
+  // Apply URL parameters to filters on mount
+  React.useEffect(() => {
+    const emergency = searchParams.get('emergency');
+    const service = searchParams.get('service');
+    const state = searchParams.get('state');
+    const animal = searchParams.get('animal');
+
+    if (!emergency && !service && !state && !animal) return;
+
+    const newFilters: FilterState = {
+      state: state || '',
+      city: '',
+      emergency: emergency === 'true',
+      animalTypes: animal ? [animal] : [],
+      services: service ? [service] : [],
+    };
+
+    updateFilters(newFilters);
+  }, [searchParams, updateFilters]);
 
   // Sort clinics
-  const sortedClinics = [...filteredClinics].sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return a.name.localeCompare(b.name);
-      case 'city':
-        return a.city.localeCompare(b.city);
-      case 'state':
-        return a.state.localeCompare(b.state);
-      default:
-        return 0;
+  const sortedClinics = useMemo(() => {
+    return [...filteredClinics].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'city':
+          return a.city.localeCompare(b.city);
+        case 'state':
+          return a.state.localeCompare(b.state);
+        default:
+          return 0;
+      }
+    });
+  }, [filteredClinics, sortBy]);
+
+  // Handle clinic deletion
+  const handleDelete = async (clinicId: string, clinicName: string) => {
+    if (!window.confirm(`Delete "${clinicName}"? This cannot be undone.`)) {
+      return;
     }
-  });
+
+    await deleteMutation.mutate(clinicId);
+
+    if (!deleteMutation.error) {
+      // Refresh the clinics list
+      loadClinics();
+    }
+  };
+
+  // Prepare filter groups for FilterPanel
+  const filterGroups = [
+    {
+      key: 'state',
+      label: 'State',
+      type: 'radio' as const,
+      options: [
+        { value: '', label: 'All States' },
+        ...filterOptions.states.map((state) => ({
+          value: state,
+          label: state,
+          count: clinics?.filter((c) => c.state === state).length,
+        })),
+      ],
+      value: filters.state,
+      onChange: (value: string | string[]) =>
+        updateFilters({ ...filters, state: value as string, city: '' }),
+    },
+    {
+      key: 'emergency',
+      label: 'Emergency Services',
+      type: 'checkbox' as const,
+      options: [
+        {
+          value: 'emergency',
+          label: 'Emergency Available',
+          count: clinics?.filter((c) => c.emergency).length,
+        },
+      ],
+      value: filters.emergency ? ['emergency'] : [],
+      onChange: (value: string | string[]) =>
+        updateFilters({
+          ...filters,
+          emergency: (value as string[]).includes('emergency'),
+        }),
+    },
+    {
+      key: 'services',
+      label: 'Services',
+      type: 'checkbox' as const,
+      options: [
+        'Vaccination',
+        'Surgery',
+        'Dental Care',
+        'Emergency Care',
+        'Pet Grooming',
+        'Pet Boarding',
+      ].map((service) => ({
+        value: service,
+        label: service,
+      })),
+      value: filters.services,
+      onChange: (value: string | string[]) =>
+        updateFilters({ ...filters, services: value as string[] }),
+    },
+  ];
+
+  // Calculate active filters count
+  const activeFiltersCount = [
+    filters.state,
+    filters.emergency,
+    ...filters.services,
+    ...filters.animalTypes,
+  ].filter(Boolean).length;
+
+  // Define table columns
+  const columns = [
+    {
+      key: 'name',
+      label: 'Clinic Name',
+      sortable: true,
+      render: (clinic: Clinic) => (
+        <div>
+          <div className='font-medium text-gray-900 mb-1'>{clinic.name}</div>
+          <ClinicContactInfo
+            clinic={clinic}
+            variant='compact'
+            showSocial={false}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'location',
+      label: 'Location',
+      render: (clinic: Clinic) => (
+        <div>
+          <div className='text-sm text-gray-900'>{clinic.city}</div>
+          <div className='text-xs text-gray-600'>{clinic.state}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (clinic: Clinic) => (
+        <div className='space-y-1'>
+          <StatusBadge
+            status={clinic.emergency ? 'emergency' : 'regular'}
+            size='sm'
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (clinic: Clinic) => (
+        <div className='flex gap-1'>
+          <Button variant='ghost' size='sm' asChild>
+            <Link href={`/clinic/${clinic.id}`}>View</Link>
+          </Button>
+          <Button
+            variant='ghost'
+            size='sm'
+            className='text-red-600 hover:text-red-800'
+            onClick={() => handleDelete(clinic.id, clinic.name)}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <HeroPageLayout
@@ -149,281 +267,33 @@ export default function ClinicsPage() {
 
       {/* Main Content */}
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='flex flex-col lg:flex-row gap-8'>
-          {/* Sidebar Filters */}
-          <div className='lg:w-80 lg:flex-shrink-0'>
-            <div className='bg-white border border-gray-200 rounded-lg p-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-6'>
-                Filter Clinics
-              </h3>
+        <div className='space-y-6'>
+          {/* Search Header */}
+          <SearchHeader
+            title='Veterinary Clinics'
+            subtitle={`${sortedClinics.length} clinics found`}
+            searchValue=''
+            onSearchChange={() => {}} // Search is handled by filters
+            showFilters={true}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            stats={[
+              { label: 'Total Clinics', value: clinics?.length || 0 },
+              {
+                label: 'Emergency Services',
+                value: clinics?.filter((c) => c.emergency).length || 0,
+              },
+              { label: 'States Covered', value: filterOptions.states.length },
+            ]}
+          />
 
-              {/* Location */}
-              <div className='mb-6'>
-                <h4 className='text-sm font-medium text-gray-900 mb-3'>
-                  Location
-                </h4>
-                <select
-                  value={filters.state}
-                  onChange={(e) => {
-                    const newState = e.target.value;
-                    // Reset other filters when state changes
-                    updateFilters({
-                      state: newState,
-                      city: '', // Reset city when state changes
-                      emergency: false,
-                      animalTypes: [],
-                      services: [],
-                    });
-                  }}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-3'
-                >
-                  <option value=''>All Locations</option>
-                  {filterOptions.states.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Services */}
-              <div className='mb-6'>
-                <h4 className='text-sm font-medium text-gray-900 mb-3'>
-                  Services
-                </h4>
-                <div className='space-y-2'>
-                  <label className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      checked={
-                        filters.services.includes('Vaccination') ||
-                        filters.services.includes('vaccination')
-                      }
-                      onChange={(e) => {
-                        const services = e.target.checked
-                          ? [
-                              ...filters.services.filter(
-                                (s) =>
-                                  s !== 'Vaccination' && s !== 'vaccination'
-                              ),
-                              'Vaccination',
-                            ]
-                          : filters.services.filter(
-                              (s) => s !== 'Vaccination' && s !== 'vaccination'
-                            );
-                        updateFilters({ ...filters, services });
-                      }}
-                      className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                    />
-                    <span className='ml-2 text-sm text-gray-700'>
-                      Vaccination
-                    </span>
-                  </label>
-                  <label className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      checked={
-                        filters.services.includes('Surgery') ||
-                        filters.services.includes('surgery')
-                      }
-                      onChange={(e) => {
-                        const services = e.target.checked
-                          ? [
-                              ...filters.services.filter(
-                                (s) => s !== 'Surgery' && s !== 'surgery'
-                              ),
-                              'Surgery',
-                            ]
-                          : filters.services.filter(
-                              (s) => s !== 'Surgery' && s !== 'surgery'
-                            );
-                        updateFilters({ ...filters, services });
-                      }}
-                      className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                    />
-                    <span className='ml-2 text-sm text-gray-700'>Surgery</span>
-                  </label>
-                  <label className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      checked={
-                        filters.services.includes('Dentistry') ||
-                        filters.services.includes('Dental Care') ||
-                        filters.services.includes('dental care')
-                      }
-                      onChange={(e) => {
-                        const services = e.target.checked
-                          ? [
-                              ...filters.services.filter(
-                                (s) =>
-                                  s !== 'Dentistry' &&
-                                  s !== 'Dental Care' &&
-                                  s !== 'dental care'
-                              ),
-                              'Dental Care',
-                            ]
-                          : filters.services.filter(
-                              (s) =>
-                                s !== 'Dentistry' &&
-                                s !== 'Dental Care' &&
-                                s !== 'dental care'
-                            );
-                        updateFilters({ ...filters, services });
-                      }}
-                      className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                    />
-                    <span className='ml-2 text-sm text-gray-700'>
-                      Dental Care
-                    </span>
-                  </label>
-                  <label className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      checked={
-                        filters.services.includes('Pet Grooming') ||
-                        filters.services.includes('Grooming') ||
-                        filters.services.includes('grooming')
-                      }
-                      onChange={(e) => {
-                        const services = e.target.checked
-                          ? [
-                              ...filters.services.filter(
-                                (s) =>
-                                  s !== 'Pet Grooming' &&
-                                  s !== 'Grooming' &&
-                                  s !== 'grooming'
-                              ),
-                              'Pet Grooming',
-                            ]
-                          : filters.services.filter(
-                              (s) =>
-                                s !== 'Pet Grooming' &&
-                                s !== 'Grooming' &&
-                                s !== 'grooming'
-                            );
-                        updateFilters({ ...filters, services });
-                      }}
-                      className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                    />
-                    <span className='ml-2 text-sm text-gray-700'>Grooming</span>
-                  </label>
-                  <label className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      checked={
-                        filters.services.includes('Pet Boarding') ||
-                        filters.services.includes('Boarding') ||
-                        filters.services.includes('boarding')
-                      }
-                      onChange={(e) => {
-                        const services = e.target.checked
-                          ? [
-                              ...filters.services.filter(
-                                (s) =>
-                                  s !== 'Pet Boarding' &&
-                                  s !== 'Boarding' &&
-                                  s !== 'boarding'
-                              ),
-                              'Pet Boarding',
-                            ]
-                          : filters.services.filter(
-                              (s) =>
-                                s !== 'Pet Boarding' &&
-                                s !== 'Boarding' &&
-                                s !== 'boarding'
-                            );
-                        updateFilters({ ...filters, services });
-                      }}
-                      className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                    />
-                    <span className='ml-2 text-sm text-gray-700'>Boarding</span>
-                  </label>
-                  <label className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      checked={filters.emergency}
-                      onChange={(e) =>
-                        updateFilters({
-                          ...filters,
-                          emergency: e.target.checked,
-                        })
-                      }
-                      className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                    />
-                    <span className='ml-2 text-sm text-gray-700'>
-                      Emergency Care
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Animal Type */}
-              <div className='mb-6'>
-                <h4 className='text-sm font-medium text-gray-900 mb-3'>
-                  Animal Type
-                </h4>
-                <div className='space-y-2'>
-                  {[
-                    'Dogs',
-                    'Cats',
-                    'Birds',
-                    'Rabbits',
-                    'Small Mammals',
-                    'Exotic Pets',
-                    'Reptiles',
-                    'Farm Animals',
-                    'Wildlife',
-                  ].map((animal) => (
-                    <label key={animal} className='flex items-center'>
-                      <input
-                        type='checkbox'
-                        checked={filters.animalTypes.includes(
-                          animal.toLowerCase()
-                        )}
-                        onChange={(e) => {
-                          const animalTypes = e.target.checked
-                            ? [...filters.animalTypes, animal.toLowerCase()]
-                            : filters.animalTypes.filter(
-                                (a) => a !== animal.toLowerCase()
-                              );
-                          updateFilters({ ...filters, animalTypes });
-                        }}
-                        className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                      />
-                      <span className='ml-2 text-sm text-gray-700'>
-                        {animal}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Filters */}
-              <div className='mb-6'>
-                <h4 className='text-sm font-medium text-gray-900 mb-3'>
-                  Additional Filters
-                </h4>
-                <label className='flex items-center'>
-                  <input
-                    type='checkbox'
-                    checked={filters.emergency}
-                    onChange={(e) =>
-                      updateFilters({ ...filters, emergency: e.target.checked })
-                    }
-                    className='w-4 h-4 text-emerald-600 border-gray-300 rounded'
-                  />
-                  <span className='ml-2 text-sm text-gray-700'>
-                    Emergency Services
-                  </span>
-                </label>
-              </div>
-
-              {/* Apply and Clear Buttons */}
-              <div className='space-y-3'>
-                <PrimaryButton fullWidth>Apply Filters</PrimaryButton>
-                <SecondaryButton
-                  fullWidth
-                  onClick={() =>
+          <div className='flex flex-col lg:flex-row gap-6'>
+            {/* Sidebar Filters */}
+            {showFilters && (
+              <div className='lg:w-80 lg:flex-shrink-0'>
+                <FilterPanel
+                  filterGroups={filterGroups}
+                  activeFiltersCount={activeFiltersCount}
+                  onClearAll={() =>
                     updateFilters({
                       state: '',
                       city: '',
@@ -432,198 +302,32 @@ export default function ClinicsPage() {
                       services: [],
                     })
                   }
-                >
-                  Clear All Filters
-                </SecondaryButton>
-              </div>
-            </div>
-          </div>
-
-          {/* Results Section */}
-          <div className='flex-1'>
-            {/* Active Filters Display */}
-            {(filters.state ||
-              filters.emergency ||
-              filters.services.length > 0 ||
-              filters.animalTypes.length > 0) && (
-              <div className='mb-6 p-4 bg-gray-50 rounded-lg'>
-                <h3 className='text-sm font-medium text-gray-900 mb-2'>
-                  Active Filters:
-                </h3>
-                <div className='flex flex-wrap gap-2'>
-                  {filters.state && (
-                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full'>
-                      State: {filters.state}
-                    </span>
-                  )}
-                  {filters.emergency && (
-                    <span className='inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full'>
-                      Emergency Services
-                    </span>
-                  )}
-                  {filters.services.map((service) => (
-                    <span
-                      key={service}
-                      className='inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full'
-                    >
-                      Service: {service}
-                    </span>
-                  ))}
-                  {filters.animalTypes.map((animal) => (
-                    <span
-                      key={animal}
-                      className='inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full'
-                    >
-                      Animal: {animal}
-                    </span>
-                  ))}
-                </div>
+                />
               </div>
             )}
 
-            {/* Results Header */}
-            <div className='flex justify-between items-center mb-6'>
-              <h2 className='text-xl font-semibold text-gray-900'>
-                {sortedClinics.length} Clinics Found
-                {filters.state && (
-                  <span className='text-sm font-normal text-gray-600 ml-2'>
-                    in {filters.state}
-                  </span>
-                )}
-              </h2>
-              <div className='flex items-center gap-2'>
-                <span className='text-sm text-gray-600'>Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className='px-3 py-1 border border-gray-300 rounded text-sm'
-                >
-                  <option value='name'>Name (A-Z)</option>
-                  <option value='city'>City</option>
-                  <option value='state'>State</option>
-                </select>
-              </div>
+            {/* Main Content */}
+            <div className='flex-1'>
+              <DataTable
+                data={sortedClinics}
+                columns={columns}
+                loading={loading}
+                searchable={false} // Search handled by filters
+                sortable={true}
+                emptyMessage='No clinics found. Try adjusting your filters.'
+                actions={
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className='px-3 py-1 border border-gray-300 rounded text-sm'
+                  >
+                    <option value='name'>Sort by Name</option>
+                    <option value='city'>Sort by City</option>
+                    <option value='state'>Sort by State</option>
+                  </select>
+                }
+              />
             </div>
-
-            {/* Clinic Grid */}
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {sortedClinics.map((clinic) => (
-                <div
-                  key={clinic.id}
-                  className='bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full'
-                >
-                  {/* Placeholder Image */}
-                  <div className='h-40 bg-gray-200 flex items-center justify-center'>
-                    <div className='text-center text-gray-400'>
-                      <PawPrint size={32} className='mx-auto mb-1' />
-                      <span className='text-xs'>Clinic Image</span>
-                    </div>
-                  </div>
-
-                  <div className='p-4 flex flex-col flex-1'>
-                    <div className='flex justify-between items-start mb-2'>
-                      <h3 className='font-semibold text-gray-900 text-sm leading-tight'>
-                        {clinic.name}
-                      </h3>
-                      {clinic.emergency && (
-                        <span className='bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full ml-2 flex-shrink-0'>
-                          Emergency
-                        </span>
-                      )}
-                    </div>
-
-                    <p className='text-gray-600 text-xs mb-3'>
-                      {clinic.street}, {clinic.city}, {clinic.state}
-                    </p>
-
-                    <div className='mb-3 flex-1'>
-                      <p className='text-xs text-gray-600 mb-1'>
-                        <strong>Animals:</strong>{' '}
-                        {clinic.animals_treated.length > 0
-                          ? clinic.animals_treated.slice(0, 3).join(', ')
-                          : 'Dogs, Cats, Birds, Small Mammals'}
-                      </p>
-                    </div>
-
-                    {/* Service Tags */}
-                    <div className='flex flex-wrap gap-1 mb-3'>
-                      {/* Show Vaccination if it's a common service */}
-                      <span className='bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded'>
-                        Vaccination
-                      </span>
-                      {/* Show Surgery if available in services or specializations */}
-                      {(clinic.services_offered?.some((s) =>
-                        s.toLowerCase().includes('surgery')
-                      ) ||
-                        clinic.specializations?.some((s) =>
-                          s.toLowerCase().includes('surgery')
-                        ) ||
-                        clinic.specializations?.some((s) =>
-                          s.toLowerCase().includes('orthopedic')
-                        )) && (
-                        <span className='bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded'>
-                          Surgery
-                        </span>
-                      )}
-                      {/* Show Dental Care if available */}
-                      {(clinic.services_offered?.some((s) =>
-                        s.toLowerCase().includes('dental')
-                      ) ||
-                        clinic.specializations?.some((s) =>
-                          s.toLowerCase().includes('dentistry')
-                        )) && (
-                        <span className='bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded'>
-                          Dental Care
-                        </span>
-                      )}
-                      {/* Show Grooming if available */}
-                      {clinic.services_offered?.some((s) =>
-                        s.toLowerCase().includes('grooming')
-                      ) && (
-                        <span className='bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded'>
-                          Grooming
-                        </span>
-                      )}
-                      {/* Show more indicator if there are additional services */}
-                      {(clinic.services_offered?.length || 0) +
-                        (clinic.specializations?.length || 0) >
-                        4 && (
-                        <span className='text-xs text-gray-500'>
-                          +
-                          {(clinic.services_offered?.length || 0) +
-                            (clinic.specializations?.length || 0) -
-                            4}{' '}
-                          more
-                        </span>
-                      )}
-                    </div>
-
-                    <Button
-                      asChild
-                      variant='emerald'
-                      size='sm'
-                      fullWidth
-                      className='mt-auto'
-                    >
-                      <Link href={`/clinic/${clinic.id}`}>View Details</Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* No Results */}
-            {sortedClinics.length === 0 && (
-              <div className='text-center py-12'>
-                <PawPrint size={48} className='mx-auto text-gray-400 mb-4' />
-                <h3 className='text-lg font-medium text-gray-900 mb-2'>
-                  No clinics found
-                </h3>
-                <p className='text-gray-600'>
-                  Try adjusting your filters to see more results.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
