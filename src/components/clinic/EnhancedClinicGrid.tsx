@@ -40,12 +40,63 @@ interface ClinicCardProps {
   viewMode: 'grid' | 'list';
 }
 
+// ✅ FIXED STATUS LOGIC FUNCTION
+function getEnhancedClinicStatus(clinic: Clinic) {
+  const todayHours = getTodayHours(clinic.hours);
+  const isEmergency = clinic.emergency;
+  const is24Hours =
+    todayHours === '24/7' || todayHours.toLowerCase().includes('24');
+  const isCurrentlyOpenNow = isCurrentlyOpen(clinic.hours);
+
+  if (isEmergency && is24Hours) {
+    return {
+      isOpen: true,
+      status: 'emergency-open',
+      badge: 'Open 24/7',
+      color: 'bg-emerald-100 text-emerald-800',
+      dotColor: 'bg-emerald-400',
+    };
+  } else if (is24Hours) {
+    return {
+      isOpen: true,
+      status: 'open-24h',
+      badge: 'Open 24/7',
+      color: 'bg-green-100 text-green-800',
+      dotColor: 'bg-green-400',
+    };
+  } else if (isEmergency) {
+    return {
+      isOpen: true, // Emergency services are always "available"
+      status: 'emergency',
+      badge: 'Emergency Available',
+      color: 'bg-red-100 text-red-800',
+      dotColor: 'bg-red-400',
+    };
+  } else if (isCurrentlyOpenNow) {
+    return {
+      isOpen: true,
+      status: 'open',
+      badge: 'Open Now',
+      color: 'bg-green-100 text-green-800',
+      dotColor: 'bg-green-400',
+    };
+  } else {
+    return {
+      isOpen: false,
+      status: 'closed',
+      badge: 'Closed',
+      color: 'bg-gray-100 text-gray-600',
+      dotColor: 'bg-gray-300',
+    };
+  }
+}
+
 function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
-  // ✅ USE CENTRALIZED STATUS LOGIC
-  const _statusInfo = getClinicStatus(clinic);
-  const isOpen = isCurrentlyOpen(clinic.hours);
   const todayHours = getTodayHours(clinic.hours);
   const address = formatAddress(clinic);
+
+  // ✅ USE ENHANCED STATUS LOGIC
+  const statusInfo = getEnhancedClinicStatus(clinic);
 
   if (viewMode === 'list') {
     return (
@@ -77,15 +128,11 @@ function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
                     </Badge>
                   )}
                   <Badge
-                    variant={isOpen ? 'default' : 'secondary'}
-                    className={`${
-                      isOpen
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
+                    variant='secondary'
+                    className={`${statusInfo.color} border-0`}
                   >
                     <Clock size={12} className='mr-1' />
-                    {isOpen ? 'Open Now' : 'Closed'}
+                    {statusInfo.badge}
                   </Badge>
                 </div>
               </div>
@@ -237,16 +284,14 @@ function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
               </div>
             </div>
 
-            {/* ✅ STATUS INDICATOR */}
+            {/* ✅ ENHANCED STATUS INDICATOR */}
             <div
-              className={`w-3 h-3 rounded-full ${
-                isOpen ? 'bg-green-400' : 'bg-gray-300'
-              }`}
-              title={isOpen ? 'Open Now' : 'Closed'}
+              className={`w-3 h-3 rounded-full ${statusInfo.dotColor}`}
+              title={statusInfo.badge}
             />
           </div>
 
-          {/* ✅ STATUS BADGES */}
+          {/* ✅ ENHANCED STATUS BADGES */}
           <div className='flex items-center gap-2 mt-2'>
             {clinic.emergency && (
               <Badge
@@ -258,14 +303,10 @@ function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
               </Badge>
             )}
             <Badge
-              variant={isOpen ? 'default' : 'secondary'}
-              className={`text-xs ${
-                isOpen
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-600'
-              }`}
+              variant='secondary'
+              className={`text-xs ${statusInfo.color} border-0`}
             >
-              {isOpen ? 'Open Now' : 'Closed'}
+              {statusInfo.badge}
             </Badge>
           </div>
         </CardHeader>
@@ -325,7 +366,7 @@ export function EnhancedClinicGrid({
 }: EnhancedClinicGridProps) {
   const [sortBy, setSortBy] = useState<'name' | 'status'>('name');
 
-  // ✅ SORT CLINICS
+  // ✅ ENHANCED SORT CLINICS WITH FIXED STATUS
   const sortedClinics = useMemo(() => {
     if (!clinics) return [];
 
@@ -334,11 +375,15 @@ export function EnhancedClinicGrid({
         return a.name.localeCompare(b.name);
       }
 
-      // Sort by status (Emergency > Open > Closed)
+      // ✅ ENHANCED STATUS PRIORITY WITH 24/7 LOGIC
       const getStatusPriority = (clinic: Clinic) => {
-        if (clinic.emergency) return 3;
-        if (isCurrentlyOpen(clinic.hours)) return 2;
-        return 1;
+        const statusInfo = getEnhancedClinicStatus(clinic);
+
+        if (statusInfo.status === 'emergency-open') return 5; // Emergency + 24/7
+        if (statusInfo.status === 'emergency') return 4; // Emergency only
+        if (statusInfo.status === 'open-24h') return 3; // 24/7 non-emergency
+        if (statusInfo.status === 'open') return 2; // Currently open
+        return 1; // Closed
       };
 
       const priorityA = getStatusPriority(a);

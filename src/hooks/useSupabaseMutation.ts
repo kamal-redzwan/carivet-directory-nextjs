@@ -8,8 +8,13 @@ interface UseSupabaseMutationReturn<T, P> {
   reset: () => void;
 }
 
+interface MutationResult<T> {
+  data: T | null;
+  error: unknown;
+}
+
 export function useSupabaseMutation<T, P>(
-  mutationFn: (params: P) => Promise<{ data: T | null; error: any }>
+  mutationFn: (params: P) => Promise<MutationResult<T>>
 ): UseSupabaseMutationReturn<T, P> {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +29,13 @@ export function useSupabaseMutation<T, P>(
       const result = await mutationFn(params);
 
       if (result.error) {
-        throw new Error(result.error.message || 'Mutation failed');
+        const errorMessage =
+          result.error instanceof Error
+            ? result.error.message
+            : typeof result.error === 'string'
+            ? result.error
+            : 'Mutation failed';
+        throw new Error(errorMessage);
       }
 
       setSuccess(true);

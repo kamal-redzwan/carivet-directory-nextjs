@@ -11,7 +11,20 @@ import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { HeroWithSearch } from '@/components/layout/HeroSection';
 import { LinkButton, Button } from '@/components/ui/button';
-import { SpecializedServicesSection } from '@/components/examples/ServiceFeatureExamples';
+import { ServicesGrid } from '@/components/ServiceFeatureComponents';
+import { veterinaryServices } from '@/data/serviceFeatures';
+
+// Specialized Services Section Component
+function SpecializedServicesSection() {
+  return (
+    <ServicesGrid
+      title='Specialized Veterinary Services'
+      subtitle='Find clinics offering specialized care for your pets'
+      services={veterinaryServices}
+      sectionClassName='py-16 bg-gray-50'
+    />
+  );
+}
 
 export default function Home() {
   const router = useRouter();

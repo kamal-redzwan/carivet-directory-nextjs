@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, MapPin, Clock, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,8 @@ import {
   isCurrentlyOpen,
   SearchFilters,
 } from '@/utils/businessLogic';
+
+import { getTodayHours } from '@/utils/formatters';
 
 interface EnhancedSearchPanelProps {
   clinics: Clinic[];
@@ -75,11 +77,23 @@ export function EnhancedSearchPanel({
     return sorted;
   }, [clinics, filters, sortBy, sortOrder]);
 
-  // ✅ REAL-TIME STATS
+  // ✅ REAL-TIME STATS WITH FIXED 24/7 LOGIC
   const stats = useMemo(() => {
-    const openNow = filteredAndSortedClinics.filter((c) =>
-      isCurrentlyOpen(c.hours)
-    );
+    // Helper function to determine if clinic is actually open/available
+    const isClinicAvailable = (clinic: Clinic) => {
+      const todayHours = getTodayHours(clinic.hours);
+      const is24Hours =
+        todayHours === '24/7' || todayHours.toLowerCase().includes('24');
+      const isCurrentlyOpenNow = isCurrentlyOpen(clinic.hours);
+
+      // Consider clinic "open" if:
+      // 1. It's 24/7 (always available)
+      // 2. It has emergency services (always available for emergencies)
+      // 3. It's currently within operating hours
+      return is24Hours || clinic.emergency || isCurrentlyOpenNow;
+    };
+
+    const openNow = filteredAndSortedClinics.filter(isClinicAvailable);
     const emergency = filteredAndSortedClinics.filter((c) => c.emergency);
     const total = filteredAndSortedClinics.length;
 
@@ -94,7 +108,7 @@ export function EnhancedSearchPanel({
   };
 
   // Apply filters and notify parent
-  React.useEffect(() => {
+  useEffect(() => {
     onFiltersChange(filteredAndSortedClinics);
   }, [filteredAndSortedClinics, onFiltersChange]);
 
@@ -127,12 +141,12 @@ export function EnhancedSearchPanel({
               <Search className='h-5 w-5' />
               Search Veterinary Clinics
             </CardTitle>
-            <div className='flex items-center gap-2 text-sm text-gray-600'>
-              <span>{stats.total} clinics found</span>
-              {activeFiltersCount > 0 && (
-                <Badge variant='secondary'>{activeFiltersCount} filters</Badge>
-              )}
-            </div>
+            {activeFiltersCount > 0 && (
+              <Badge variant='secondary'>{activeFiltersCount} filters</Badge>
+            )}
+          </div>
+          <div className='text-sm text-gray-600'>
+            {stats.total} clinics found
           </div>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -148,24 +162,24 @@ export function EnhancedSearchPanel({
           </div>
 
           {/* Quick Stats */}
-          <div className='grid grid-cols-3 gap-4'>
+          <div className='grid grid-cols-3 gap-3'>
             <div className='text-center p-3 bg-emerald-50 rounded-lg'>
-              <div className='text-lg font-semibold text-emerald-700'>
+              <div className='text-xl font-bold text-emerald-700'>
                 {stats.total}
               </div>
-              <div className='text-sm text-emerald-600'>Total Clinics</div>
+              <div className='text-xs text-emerald-600 mt-1'>Total Clinics</div>
             </div>
             <div className='text-center p-3 bg-green-50 rounded-lg'>
-              <div className='text-lg font-semibold text-green-700'>
+              <div className='text-xl font-bold text-green-700'>
                 {stats.openNow}
               </div>
-              <div className='text-sm text-green-600'>Open Now</div>
+              <div className='text-xs text-green-600 mt-1'>Open Now</div>
             </div>
             <div className='text-center p-3 bg-red-50 rounded-lg'>
-              <div className='text-lg font-semibold text-red-700'>
+              <div className='text-xl font-bold text-red-700'>
                 {stats.emergency}
               </div>
-              <div className='text-sm text-red-600'>Emergency</div>
+              <div className='text-xs text-red-600 mt-1'>24/7 Care</div>
             </div>
           </div>
         </CardContent>
@@ -195,16 +209,18 @@ export function EnhancedSearchPanel({
             </h4>
             <div className='grid grid-cols-2 gap-3'>
               <Select
-                value={filters.state || ''}
+                value={filters.state || 'all-states'}
                 onValueChange={(value) =>
-                  updateFilters({ state: value || undefined })
+                  updateFilters({
+                    state: value === 'all-states' ? undefined : value,
+                  })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder='Select State' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value=''>All States</SelectItem>
+                  <SelectItem value='all-states'>All States</SelectItem>
                   {filterOptions.states.map((state) => (
                     <SelectItem key={state} value={state}>
                       {state} ({clinics.filter((c) => c.state === state).length}
@@ -215,43 +231,29 @@ export function EnhancedSearchPanel({
               </Select>
 
               <Select
-                value={filters.city || ''}
+                value={filters.city || 'all-cities'}
                 onValueChange={(value) =>
-                  updateFilters({ city: value || undefined })
+                  updateFilters({
+                    city: value === 'all-cities' ? undefined : value,
+                  })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder='Select City' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value=''>All Cities</SelectItem>
-                  {filterOptions.cities
-                    .filter(
-                      (city) =>
-                        !filters.state ||
-                        clinics.some(
-                          (c) => c.city === city && c.state === filters.state
-                        )
-                    )
-                    .map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city} (
-                        {
-                          clinics.filter(
-                            (c) =>
-                              c.city === city &&
-                              (!filters.state || c.state === filters.state)
-                          ).length
-                        }
-                        )
-                      </SelectItem>
-                    ))}
+                  <SelectItem value='all-cities'>All Cities</SelectItem>
+                  {filterOptions.cities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city} ({clinics.filter((c) => c.city === city).length})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* ✅ NEW: Real-time Status Filters */}
+          {/* Availability Filters */}
           <div className='space-y-3'>
             <h4 className='font-medium flex items-center gap-2'>
               <Clock className='h-4 w-4' />
@@ -266,9 +268,8 @@ export function EnhancedSearchPanel({
                     updateFilters({ isOpen: checked ? true : undefined })
                   }
                 />
-                <label htmlFor='open-now' className='text-sm font-medium'>
-                  Open Now (
-                  {clinics.filter((c) => isCurrentlyOpen(c.hours)).length})
+                <label htmlFor='open-now' className='text-sm'>
+                  Open Now ({stats.openNow})
                 </label>
               </div>
               <div className='flex items-center space-x-2'>
@@ -281,11 +282,10 @@ export function EnhancedSearchPanel({
                 />
                 <label
                   htmlFor='emergency'
-                  className='text-sm font-medium flex items-center gap-1'
+                  className='text-sm flex items-center gap-1'
                 >
                   <Shield className='h-3 w-3' />
-                  Emergency Services (
-                  {clinics.filter((c) => c.emergency).length})
+                  Emergency Services ({stats.emergency})
                 </label>
               </div>
             </div>
@@ -294,12 +294,15 @@ export function EnhancedSearchPanel({
           {/* Services Filter */}
           <div className='space-y-3'>
             <h4 className='font-medium'>Services Offered</h4>
-            <div className='grid grid-cols-2 gap-2 max-h-32 overflow-y-auto'>
+            <div className='space-y-2 max-h-48 overflow-y-auto pr-2'>
               {filterOptions.services.map((service) => (
-                <div key={service} className='flex items-center space-x-2'>
+                <div
+                  key={service}
+                  className='flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors'
+                >
                   <Checkbox
                     id={`service-${service}`}
-                    checked={filters.services?.includes(service) || false}
+                    checked={filters.services?.includes(service)}
                     onCheckedChange={(checked) => {
                       const newServices = checked
                         ? [...(filters.services || []), service]
@@ -307,14 +310,20 @@ export function EnhancedSearchPanel({
                       updateFilters({ services: newServices });
                     }}
                   />
-                  <label htmlFor={`service-${service}`} className='text-sm'>
-                    {service} (
-                    {
-                      clinics.filter((c) =>
-                        c.services_offered?.includes(service)
-                      ).length
-                    }
-                    )
+                  <label
+                    htmlFor={`service-${service}`}
+                    className='text-sm flex-1 cursor-pointer'
+                  >
+                    <span className='font-medium'>{service}</span>
+                    <span className='text-gray-500 ml-1'>
+                      (
+                      {
+                        clinics.filter((c) =>
+                          c.services_offered?.includes(service)
+                        ).length
+                      }
+                      )
+                    </span>
                   </label>
                 </div>
               ))}
@@ -323,13 +332,16 @@ export function EnhancedSearchPanel({
 
           {/* Specializations Filter */}
           <div className='space-y-3'>
-            <h4 className='font-medium'>Specializations</h4>
-            <div className='grid grid-cols-2 gap-2 max-h-32 overflow-y-auto'>
+            <h4 className='font-medium'>Animal Specializations</h4>
+            <div className='space-y-2 max-h-48 overflow-y-auto pr-2'>
               {filterOptions.specializations.map((spec) => (
-                <div key={spec} className='flex items-center space-x-2'>
+                <div
+                  key={spec}
+                  className='flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors'
+                >
                   <Checkbox
                     id={`spec-${spec}`}
-                    checked={filters.specializations?.includes(spec) || false}
+                    checked={filters.specializations?.includes(spec)}
                     onCheckedChange={(checked) => {
                       const newSpecs = checked
                         ? [...(filters.specializations || []), spec]
@@ -339,13 +351,19 @@ export function EnhancedSearchPanel({
                       updateFilters({ specializations: newSpecs });
                     }}
                   />
-                  <label htmlFor={`spec-${spec}`} className='text-sm'>
-                    {spec} (
-                    {
-                      clinics.filter((c) => c.specializations?.includes(spec))
-                        .length
-                    }
-                    )
+                  <label
+                    htmlFor={`spec-${spec}`}
+                    className='text-sm flex-1 cursor-pointer'
+                  >
+                    <span className='font-medium'>{spec}</span>
+                    <span className='text-gray-500 ml-1'>
+                      (
+                      {
+                        clinics.filter((c) => c.specializations?.includes(spec))
+                          .length
+                      }
+                      )
+                    </span>
                   </label>
                 </div>
               ))}
@@ -363,7 +381,9 @@ export function EnhancedSearchPanel({
           <div className='flex gap-3'>
             <Select
               value={sortBy}
-              onValueChange={(value: any) => setSortBy(value)}
+              onValueChange={(value: 'name' | 'city' | 'state' | 'emergency') =>
+                setSortBy(value)
+              }
             >
               <SelectTrigger className='w-32'>
                 <SelectValue />
@@ -377,7 +397,7 @@ export function EnhancedSearchPanel({
             </Select>
             <Select
               value={sortOrder}
-              onValueChange={(value: any) => setSortOrder(value)}
+              onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}
             >
               <SelectTrigger className='w-32'>
                 <SelectValue />

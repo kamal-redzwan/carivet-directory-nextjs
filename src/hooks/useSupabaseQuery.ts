@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 
 interface UseSupabaseQueryOptions {
   enabled?: boolean;
@@ -13,9 +12,13 @@ interface UseSupabaseQueryReturn<T> {
   refetch: () => Promise<void>;
 }
 
+interface QueryResult<T> {
+  data: T | null;
+  error: unknown;
+}
+
 export function useSupabaseQuery<T>(
-  queryFn: () => Promise<{ data: T | null; error: any }>,
-  deps: unknown[] = [],
+  queryFn: () => Promise<QueryResult<T>>,
   options: UseSupabaseQueryOptions = {}
 ): UseSupabaseQueryReturn<T> {
   const { enabled = true, refetchOnMount = true } = options;
@@ -34,7 +37,13 @@ export function useSupabaseQuery<T>(
       const result = await queryFn();
 
       if (result.error) {
-        throw new Error(result.error.message || 'Query failed');
+        const errorMessage =
+          result.error instanceof Error
+            ? result.error.message
+            : typeof result.error === 'string'
+            ? result.error
+            : 'Query failed';
+        throw new Error(errorMessage);
       }
 
       setData(result.data);
@@ -51,7 +60,7 @@ export function useSupabaseQuery<T>(
     if (enabled && refetchOnMount) {
       executeQuery();
     }
-  }, [...deps, enabled, refetchOnMount]);
+  }, [executeQuery, enabled, refetchOnMount]);
 
   return {
     data,

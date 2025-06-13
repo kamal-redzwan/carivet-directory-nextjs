@@ -5,16 +5,32 @@
 export interface Clinic {
   id: string;
   name: string;
-  street?: string;
+  street: string;
   city: string;
   state: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  hours?: BusinessHours;
-  services?: string[];
-  specializations?: string[];
-  emergencyServices?: boolean;
+  postcode: string;
+  phone: string;
+  email?: string | null;
+  website?: string | null;
+  hours: {
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+  };
+  emergency: boolean;
+  emergency_hours?: string | null;
+  emergency_details?: string | null;
+  animals_treated: string[];
+  specializations: string[];
+  services_offered: string[];
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BusinessHours {
@@ -39,20 +55,22 @@ export interface ClinicStatus {
 
 export const getClinicStatus = (
   hours?: BusinessHours,
-  emergencyServices = false
+  emergency = false
 ): ClinicStatus => {
   if (!hours) {
     return {
       status: 'closed',
       message: 'Hours not available',
-      isEmergency: emergencyServices,
+      isEmergency: emergency,
     };
   }
 
   const now = new Date();
-  const currentDay = now.toLocaleDateString('en-US', {
-    weekday: 'lowercase',
-  }) as keyof BusinessHours;
+  const currentDay = now
+    .toLocaleDateString('en-US', {
+      weekday: 'long',
+    })
+    .toLowerCase() as keyof BusinessHours;
   const currentTime = now.getHours() * 100 + now.getMinutes(); // Convert to HHMM format
 
   const todayHours = hours[currentDay];
@@ -60,10 +78,8 @@ export const getClinicStatus = (
   if (!todayHours || todayHours.toLowerCase() === 'closed') {
     return {
       status: 'closed',
-      message: emergencyServices
-        ? 'Closed - Emergency services available'
-        : 'Closed',
-      isEmergency: emergencyServices,
+      message: emergency ? 'Closed - Emergency services available' : 'Closed',
+      isEmergency: emergency,
     };
   }
 
@@ -76,7 +92,7 @@ export const getClinicStatus = (
     return {
       status: 'closed',
       message: 'Hours format invalid',
-      isEmergency: emergencyServices,
+      isEmergency: emergency,
     };
   }
 
@@ -96,7 +112,7 @@ export const getClinicStatus = (
 
   const isOpen = currentTime >= openTime && currentTime <= closeTime;
 
-  if (emergencyServices) {
+  if (emergency) {
     return {
       status: isOpen ? 'open' : 'closed',
       message: isOpen
@@ -224,6 +240,45 @@ export interface SearchFilters {
   specializations?: string[];
 }
 
+export const searchClinics = (
+  clinics: Clinic[],
+  filters: SearchFilters
+): Clinic[] => {
+  return filterClinics(clinics, filters);
+};
+
+export const sortClinics = (
+  clinics: Clinic[],
+  sortBy: 'name' | 'city' | 'state' | 'emergency',
+  sortOrder: 'asc' | 'desc'
+): Clinic[] => {
+  return [...clinics].sort((a, b) => {
+    let comparison = 0;
+
+    switch (sortBy) {
+      case 'name':
+        comparison = a.name.localeCompare(b.name);
+        break;
+      case 'city':
+        comparison = a.city.localeCompare(b.city);
+        break;
+      case 'state':
+        comparison = a.state.localeCompare(b.state);
+        break;
+      case 'emergency':
+        comparison = (a.emergency ? 1 : 0) - (b.emergency ? 1 : 0);
+        break;
+    }
+
+    return sortOrder === 'asc' ? comparison : -comparison;
+  });
+};
+
+export const isCurrentlyOpen = (hours?: BusinessHours): boolean => {
+  const status = getClinicStatus(hours);
+  return status.status === 'open';
+};
+
 export const filterClinics = (
   clinics: Clinic[],
   filters: SearchFilters
@@ -236,7 +291,7 @@ export const filterClinics = (
         clinic.name,
         clinic.city,
         clinic.state,
-        ...(clinic.services || []),
+        ...(clinic.services_offered || []),
         ...(clinic.specializations || []),
       ]
         .join(' ')
@@ -263,13 +318,13 @@ export const filterClinics = (
     }
 
     // Emergency services filter
-    if (filters.emergency && !clinic.emergencyServices) {
+    if (filters.emergency && !clinic.emergency) {
       return false;
     }
 
     // Open status filter
     if (filters.isOpen !== undefined) {
-      const status = getClinicStatus(clinic.hours, clinic.emergencyServices);
+      const status = getClinicStatus(clinic.hours, clinic.emergency);
       if ((status.status === 'open') !== filters.isOpen) {
         return false;
       }
@@ -277,7 +332,7 @@ export const filterClinics = (
 
     // Services filter
     if (filters.services && filters.services.length > 0) {
-      const clinicServices = clinic.services || [];
+      const clinicServices = clinic.services_offered || [];
       const hasRequiredServices = filters.services.some((service) =>
         clinicServices.some((cs) =>
           cs.toLowerCase().includes(service.toLowerCase())

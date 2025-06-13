@@ -53,7 +53,7 @@ export function useClinicFormValidation() {
     return errors;
   };
 
-  const getFieldError = (field: string): string | undefined => {
+  const getFieldError = (_field: string): string | undefined => {
     // Implementation to get specific field error
     // This would typically be connected to your form state
     return undefined;

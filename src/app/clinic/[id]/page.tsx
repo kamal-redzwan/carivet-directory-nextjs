@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Clinic } from '@/types/clinic';
 import { ArrowLeft, PawPrint, ExternalLink } from 'lucide-react';
@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ClinicMap from '@/components/ClinicMap';
 
-// ✅ IMPORT CENTRALIZED UTILITIES (replacing duplicate functions)
+// ✅ IMPORT CENTRALIZED UTILITIES
 import {
   formatAddress,
   formatAddressForMaps,
@@ -26,36 +26,53 @@ import {
 
 export default function ClinicDetailPage() {
   const params = useParams();
+  const [clinic, setClinic] = useState<Clinic | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
-  // Load clinic data using useSupabaseQuery
-  const {
-    data: clinic,
-    loading,
-    error,
-    refetch: loadClinic,
-  } = useSupabaseQuery<Clinic>(
-    async () => {
+  const loadClinic = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
       if (!params?.id) {
         throw new Error('No clinic ID provided');
       }
 
-      const { data, error } = await supabase
+      console.log('Loading clinic with ID:', params.id);
+
+      const { data, error: queryError } = await supabase
         .from('clinics')
         .select('*')
         .eq('id', params.id as string)
         .single();
 
-      if (error) throw new Error(error.message);
-      if (!data) throw new Error('No clinic data found');
+      console.log('Clinic query result:', { data, error: queryError });
 
-      return { data, error: null };
-    },
-    [params?.id], // Refetch when ID changes
-    { enabled: !!params?.id, refetchOnMount: true }
-  );
+      if (queryError) {
+        console.error('Supabase error:', queryError);
+        throw new Error(queryError.message);
+      }
 
-  // ✅ REMOVED DUPLICATE HELPER FUNCTIONS (formatAddress, getTodayHours)
-  // ✅ NOW USING CENTRALIZED UTILITIES
+      if (!data) {
+        throw new Error('No clinic found with this ID');
+      }
+
+      setClinic(data);
+    } catch (err) {
+      console.error('Error loading clinic:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load clinic when component mounts or ID changes
+  useEffect(() => {
+    if (params?.id) {
+      loadClinic();
+    }
+  }, [params?.id]);
 
   return (
     <HeroPageLayout
@@ -67,7 +84,7 @@ export default function ClinicDetailPage() {
       }
       loading={loading}
       error={error}
-      onRetry={() => loadClinic()}
+      onRetry={loadClinic}
       noPadding
     >
       {clinic && (
@@ -139,34 +156,62 @@ export default function ClinicDetailPage() {
 
               {/* Sidebar */}
               <div className='space-y-6'>
-                {/* ✅ ENHANCED STATUS CARD WITH CENTRALIZED LOGIC */}
+                {/* ✅ ENHANCED STATUS CARD WITH FIXED LOGIC */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Current Status</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {(() => {
-                      const statusInfo = getClinicStatus(clinic);
+                      // Custom status logic for detail page
+                      const todayHours = getTodayHours(clinic.hours);
+                      const isEmergency = clinic.emergency;
+                      const is24Hours =
+                        todayHours === '24/7' ||
+                        todayHours.toLowerCase().includes('24');
+
+                      let status, message, bgColor, textColor;
+
+                      if (isEmergency && is24Hours) {
+                        status = 'emergency-open';
+                        message = 'Open 24/7 - Emergency services available';
+                        bgColor = 'bg-emerald-100';
+                        textColor = 'text-emerald-800';
+                      } else if (isEmergency) {
+                        status = 'emergency';
+                        message = 'Emergency services available';
+                        bgColor = 'bg-red-100';
+                        textColor = 'text-red-800';
+                      } else if (is24Hours) {
+                        status = 'open';
+                        message = 'Open 24/7';
+                        bgColor = 'bg-green-100';
+                        textColor = 'text-green-800';
+                      } else {
+                        // Use the original status function for regular clinics
+                        const statusInfo = getClinicStatus(clinic);
+                        status = statusInfo.status;
+                        message = statusInfo.message;
+                        bgColor =
+                          statusInfo.status === 'open'
+                            ? 'bg-green-100'
+                            : 'bg-gray-100';
+                        textColor =
+                          statusInfo.status === 'open'
+                            ? 'text-green-800'
+                            : 'text-gray-800';
+                      }
+
                       return (
                         <div className='text-center'>
                           <Badge
-                            variant={
-                              statusInfo.status === 'open'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                            className={`text-sm px-4 py-2 ${
-                              statusInfo.status === 'open'
-                                ? 'bg-green-100 text-green-800'
-                                : statusInfo.status === 'emergency'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
+                            variant='secondary'
+                            className={`text-sm px-4 py-2 ${bgColor} ${textColor} border-0`}
                           >
-                            {statusInfo.message}
+                            {message}
                           </Badge>
                           <p className='text-sm text-gray-600 mt-2'>
-                            Today: {getTodayHours(clinic.hours)}
+                            Today: {todayHours}
                           </p>
                         </div>
                       );
@@ -275,7 +320,7 @@ export default function ClinicDetailPage() {
                     <Button variant='outline' fullWidth asChild>
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          formatAddressForMaps(clinic) // ✅ USING CENTRALIZED MAPS FORMATTING
+                          formatAddressForMaps(clinic)
                         )}`}
                         target='_blank'
                         rel='noopener noreferrer'

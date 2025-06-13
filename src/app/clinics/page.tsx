@@ -20,31 +20,100 @@ export default function ClinicsPage() {
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [_currentFilters, setCurrentFilters] = useState<SearchFilters>({});
+  const [isSeeded, setIsSeeded] = useState(false);
   const searchParams = useSearchParams();
 
-  // ✅ LOAD CLINICS USING EXISTING HOOK
-  const {
-    data: clinics,
-    loading,
-    error,
-    refetch: loadClinics,
-  } = useSupabaseQuery<Clinic[]>(
-    async () => {
-      // Seed database first
-      await seedDatabase();
+  // ✅ SEPARATE SEEDING LOGIC - RUNS ONLY ONCE
+  useEffect(() => {
+    const initializeDatabase = async () => {
+      try {
+        console.log('Checking if database needs seeding...');
 
-      const { data, error } = await supabase
+        // Check if data already exists
+        const { data: existingClinics, error: checkError } = await supabase
+          .from('clinics')
+          .select('id')
+          .limit(1);
+
+        if (checkError) {
+          console.error('Error checking existing data:', checkError);
+          setIsSeeded(true);
+          return;
+        }
+
+        // Only seed if no data exists
+        if (!existingClinics || existingClinics.length === 0) {
+          console.log('No data found. Seeding database...');
+          try {
+            await seedDatabase();
+            console.log('Database seeded successfully');
+          } catch (seedError) {
+            console.error('Seeding error:', seedError);
+            // Continue anyway - maybe table exists but is empty
+          }
+        } else {
+          console.log('Data already exists. Skipping seeding.');
+        }
+
+        setIsSeeded(true);
+      } catch (error) {
+        console.error('Error initializing database:', error);
+        setIsSeeded(true); // Still allow the app to continue
+      }
+    };
+
+    initializeDatabase();
+  }, []);
+
+  // ✅ LOAD CLINICS DIRECTLY - BYPASS THE HOOK
+  const [clinics, setClinics] = useState<Clinic[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
+  const loadClinics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Loading clinics directly...');
+
+      const { data, error: queryError } = await supabase
         .from('clinics')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      console.log('Direct load result:', {
+        data: data?.length,
+        error: queryError,
+      });
 
-      return { data: data || [], error: null };
-    },
-    [], // No dependencies - load once
-    { enabled: true, refetchOnMount: true }
-  );
+      if (queryError) {
+        console.error('Query error details:', {
+          message: queryError.message,
+          details: queryError.details,
+          hint: queryError.hint,
+          code: queryError.code,
+        });
+        setError(queryError);
+      } else {
+        setClinics(data || []);
+        console.log('Clinics loaded successfully:', data?.length);
+        console.log('First clinic sample:', data?.[0]);
+      }
+    } catch (err) {
+      console.error('Direct load error:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load clinics when seeding is complete
+  useEffect(() => {
+    if (!isSeeded) return;
+
+    console.log('Seeding complete, loading clinics...');
+    loadClinics();
+  }, [isSeeded]);
 
   // ✅ INITIALIZE FILTERS FROM URL PARAMETERS
   useEffect(() => {
@@ -80,6 +149,26 @@ export default function ClinicsPage() {
     setCurrentFilters(filters);
   };
 
+  // Show loading while seeding
+  if (!isSeeded) {
+    return (
+      <HeroPageLayout
+        title='Find Veterinary Clinics - CariVet Malaysia'
+        description='Discover the best veterinary care for your pets in Malaysia'
+        loading={true}
+        background='white'
+        noPadding={true}
+      >
+        <div className='flex items-center justify-center min-h-[400px]'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto'></div>
+            <p className='mt-4 text-gray-600'>Initializing database...</p>
+          </div>
+        </div>
+      </HeroPageLayout>
+    );
+  }
+
   return (
     <HeroPageLayout
       title='Find Veterinary Clinics - CariVet Malaysia'
@@ -102,11 +191,17 @@ export default function ClinicsPage() {
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
           {/* ✅ ENHANCED SEARCH PANEL */}
           <div className='lg:col-span-1'>
-            <EnhancedSearchPanel
-              clinics={clinics || []}
-              onFiltersChange={handleFiltersChange}
-              onFiltersUpdate={handleFiltersUpdate}
-            />
+            {clinics && clinics.length > 0 ? (
+              <EnhancedSearchPanel
+                clinics={clinics}
+                onFiltersChange={handleFiltersChange}
+                onFiltersUpdate={handleFiltersUpdate}
+              />
+            ) : (
+              <div className='bg-gray-50 rounded-lg p-4'>
+                <p className='text-gray-600'>Loading search options...</p>
+              </div>
+            )}
           </div>
 
           {/* ✅ ENHANCED CLINIC GRID */}
@@ -152,11 +247,19 @@ export default function ClinicsPage() {
               </div>
 
               {/* ✅ ENHANCED CLINIC GRID */}
-              <EnhancedClinicGrid
-                clinics={filteredClinics}
-                loading={loading}
-                viewMode={viewMode}
-              />
+              {clinics && clinics.length > 0 ? (
+                <EnhancedClinicGrid
+                  clinics={filteredClinics}
+                  loading={loading}
+                  viewMode={viewMode}
+                />
+              ) : (
+                <div className='bg-gray-50 rounded-lg p-8 text-center'>
+                  <p className='text-gray-600'>
+                    {loading ? 'Loading clinics...' : 'No clinics available'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
