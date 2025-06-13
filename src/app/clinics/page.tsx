@@ -1,37 +1,28 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { seedDatabase } from '@/lib/seedDatabase';
-import { useClinicFilters } from '@/hooks/useClinicFilters';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
-import { useSupabaseMutation } from '@/hooks/useSupabaseMutation';
 import { Clinic } from '@/types/clinic';
 import { supabase } from '@/lib/supabase';
-import Link from 'next/link';
 import { HeroPageLayout } from '@/components/layout/PageLayout';
 import { SimpleHero } from '@/components/layout/HeroSection';
-import { SearchHeader } from '@/components/data/SearchHeader';
-import { FilterPanel } from '@/components/data/FilterPanel';
-import { DataTable } from '@/components/data/DataTable';
-import { StatusBadge } from '@/components/common/StatusBadge';
-import { ClinicContactInfo } from '@/components/common/ClinicContactInfo';
-import { Button } from '@/components/ui/button';
 
-type FilterState = {
-  state: string;
-  city: string;
-  emergency: boolean;
-  animalTypes: string[];
-  services: string[];
-};
+// ✅ IMPORT NEW ENHANCED COMPONENTS
+import { EnhancedSearchPanel } from '@/components/search/EnhancedSearchPanel';
+import { EnhancedClinicGrid } from '@/components/clinic/EnhancedClinicGrid';
+
+// ✅ IMPORT CENTRALIZED BUSINESS LOGIC
+import { SearchFilters } from '@/utils/businessLogic';
 
 export default function ClinicsPage() {
-  const [sortBy, setSortBy] = useState('name');
-  const [showFilters, setShowFilters] = useState(false);
+  const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentFilters, setCurrentFilters] = useState<SearchFilters>({});
   const searchParams = useSearchParams();
 
-  // Load clinics using useSupabaseQuery
+  // ✅ LOAD CLINICS USING EXISTING HOOK
   const {
     data: clinics,
     loading,
@@ -55,198 +46,39 @@ export default function ClinicsPage() {
     { enabled: true, refetchOnMount: true }
   );
 
-  // Delete clinic mutation
-  const deleteMutation = useSupabaseMutation<void, string>(
-    async (clinicId: string) => {
-      const { error } = await supabase
-        .from('clinics')
-        .delete()
-        .eq('id', clinicId);
+  // ✅ INITIALIZE FILTERS FROM URL PARAMETERS
+  useEffect(() => {
+    if (!clinics) return;
 
-      if (error) throw error;
-
-      return { data: null, error: null };
-    }
-  );
-
-  // Use our custom filter hook
-  const { filters, updateFilters, filteredClinics, filterOptions } =
-    useClinicFilters(clinics || [], '');
-
-  // Apply URL parameters to filters on mount
-  React.useEffect(() => {
     const emergency = searchParams.get('emergency');
     const service = searchParams.get('service');
     const state = searchParams.get('state');
     const animal = searchParams.get('animal');
 
-    if (!emergency && !service && !state && !animal) return;
-
-    const newFilters: FilterState = {
-      state: state || '',
-      city: '',
-      emergency: emergency === 'true',
-      animalTypes: animal ? [animal] : [],
+    const initialFilters: SearchFilters = {
+      query: '',
+      state: state || undefined,
+      emergency: emergency === 'true' ? true : undefined,
       services: service ? [service] : [],
+      specializations: animal ? [animal] : [], // Map animal to specializations for now
     };
 
-    updateFilters(newFilters);
-  }, [searchParams, updateFilters]);
+    setCurrentFilters(initialFilters);
 
-  // Sort clinics
-  const sortedClinics = useMemo(() => {
-    return [...filteredClinics].sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'city':
-          return a.city.localeCompare(b.city);
-        case 'state':
-          return a.state.localeCompare(b.state);
-        default:
-          return 0;
-      }
-    });
-  }, [filteredClinics, sortBy]);
-
-  // Handle clinic deletion
-  const handleDelete = async (clinicId: string, clinicName: string) => {
-    if (!window.confirm(`Delete "${clinicName}"? This cannot be undone.`)) {
-      return;
+    // Initialize with all clinics if no filters
+    if (!emergency && !service && !state && !animal) {
+      setFilteredClinics(clinics);
     }
+  }, [searchParams, clinics]);
 
-    await deleteMutation.mutate(clinicId);
-
-    if (!deleteMutation.error) {
-      // Refresh the clinics list
-      loadClinics();
-    }
+  // ✅ HANDLE FILTER CHANGES FROM SEARCH PANEL
+  const handleFiltersChange = (filtered: Clinic[]) => {
+    setFilteredClinics(filtered);
   };
 
-  // Prepare filter groups for FilterPanel
-  const filterGroups = [
-    {
-      key: 'state',
-      label: 'State',
-      type: 'radio' as const,
-      options: [
-        { value: '', label: 'All States' },
-        ...filterOptions.states.map((state) => ({
-          value: state,
-          label: state,
-          count: clinics?.filter((c) => c.state === state).length,
-        })),
-      ],
-      value: filters.state,
-      onChange: (value: string | string[]) =>
-        updateFilters({ ...filters, state: value as string, city: '' }),
-    },
-    {
-      key: 'emergency',
-      label: 'Emergency Services',
-      type: 'checkbox' as const,
-      options: [
-        {
-          value: 'emergency',
-          label: 'Emergency Available',
-          count: clinics?.filter((c) => c.emergency).length,
-        },
-      ],
-      value: filters.emergency ? ['emergency'] : [],
-      onChange: (value: string | string[]) =>
-        updateFilters({
-          ...filters,
-          emergency: (value as string[]).includes('emergency'),
-        }),
-    },
-    {
-      key: 'services',
-      label: 'Services',
-      type: 'checkbox' as const,
-      options: [
-        'Vaccination',
-        'Surgery',
-        'Dental Care',
-        'Emergency Care',
-        'Pet Grooming',
-        'Pet Boarding',
-      ].map((service) => ({
-        value: service,
-        label: service,
-      })),
-      value: filters.services,
-      onChange: (value: string | string[]) =>
-        updateFilters({ ...filters, services: value as string[] }),
-    },
-  ];
-
-  // Calculate active filters count
-  const activeFiltersCount = [
-    filters.state,
-    filters.emergency,
-    ...filters.services,
-    ...filters.animalTypes,
-  ].filter(Boolean).length;
-
-  // Define table columns
-  const columns = [
-    {
-      key: 'name',
-      label: 'Clinic Name',
-      sortable: true,
-      render: (clinic: Clinic) => (
-        <div>
-          <div className='font-medium text-gray-900 mb-1'>{clinic.name}</div>
-          <ClinicContactInfo
-            clinic={clinic}
-            variant='compact'
-            showSocial={false}
-          />
-        </div>
-      ),
-    },
-    {
-      key: 'location',
-      label: 'Location',
-      render: (clinic: Clinic) => (
-        <div>
-          <div className='text-sm text-gray-900'>{clinic.city}</div>
-          <div className='text-xs text-gray-600'>{clinic.state}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (clinic: Clinic) => (
-        <div className='space-y-1'>
-          <StatusBadge
-            status={clinic.emergency ? 'emergency' : 'regular'}
-            size='sm'
-          />
-        </div>
-      ),
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      render: (clinic: Clinic) => (
-        <div className='flex gap-1'>
-          <Button variant='ghost' size='sm' asChild>
-            <Link href={`/clinic/${clinic.id}`}>View</Link>
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='text-red-600 hover:text-red-800'
-            onClick={() => handleDelete(clinic.id, clinic.name)}
-          >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const handleFiltersUpdate = (filters: SearchFilters) => {
+    setCurrentFilters(filters);
+  };
 
   return (
     <HeroPageLayout
@@ -258,74 +90,72 @@ export default function ClinicsPage() {
       background='white'
       noPadding={true}
     >
-      {/* Hero Section */}
+      {/* ✅ ENHANCED HERO SECTION */}
       <SimpleHero
         title='Find Veterinary Clinics'
         subtitle='Discover the best veterinary care for your pets in Malaysia'
         size='sm'
       />
 
-      {/* Main Content */}
+      {/* ✅ MAIN CONTENT WITH NEW COMPONENTS */}
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='space-y-6'>
-          {/* Search Header */}
-          <SearchHeader
-            title='Veterinary Clinics'
-            subtitle={`${sortedClinics.length} clinics found`}
-            searchValue=''
-            onSearchChange={() => {}} // Search is handled by filters
-            showFilters={true}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            stats={[
-              { label: 'Total Clinics', value: clinics?.length || 0 },
-              {
-                label: 'Emergency Services',
-                value: clinics?.filter((c) => c.emergency).length || 0,
-              },
-              { label: 'States Covered', value: filterOptions.states.length },
-            ]}
-          />
+        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
+          {/* ✅ ENHANCED SEARCH PANEL */}
+          <div className='lg:col-span-1'>
+            <EnhancedSearchPanel
+              clinics={clinics || []}
+              onFiltersChange={handleFiltersChange}
+              onFiltersUpdate={handleFiltersUpdate}
+            />
+          </div>
 
-          <div className='flex flex-col lg:flex-row gap-6'>
-            {/* Sidebar Filters */}
-            {showFilters && (
-              <div className='lg:w-80 lg:flex-shrink-0'>
-                <FilterPanel
-                  filterGroups={filterGroups}
-                  activeFiltersCount={activeFiltersCount}
-                  onClearAll={() =>
-                    updateFilters({
-                      state: '',
-                      city: '',
-                      emergency: false,
-                      animalTypes: [],
-                      services: [],
-                    })
-                  }
-                />
+          {/* ✅ ENHANCED CLINIC GRID */}
+          <div className='lg:col-span-3'>
+            <div className='space-y-4'>
+              {/* View Mode Toggle */}
+              <div className='flex items-center justify-between'>
+                <div>
+                  <h2 className='text-2xl font-bold text-gray-900'>
+                    Veterinary Clinics
+                  </h2>
+                  <p className='text-gray-600'>
+                    {filteredClinics.length} clinic
+                    {filteredClinics.length !== 1 ? 's' : ''} found
+                  </p>
+                </div>
+
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-gray-600'>View:</span>
+                  <div className='flex border border-gray-300 rounded-md'>
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`px-3 py-1 text-sm ${
+                        viewMode === 'grid'
+                          ? 'bg-emerald-600 text-white'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      Grid
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`px-3 py-1 text-sm ${
+                        viewMode === 'list'
+                          ? 'bg-emerald-600 text-white'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      List
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Main Content */}
-            <div className='flex-1'>
-              <DataTable
-                data={sortedClinics}
-                columns={columns}
+              {/* ✅ ENHANCED CLINIC GRID */}
+              <EnhancedClinicGrid
+                clinics={filteredClinics}
                 loading={loading}
-                searchable={false} // Search handled by filters
-                sortable={true}
-                emptyMessage='No clinics found. Try adjusting your filters.'
-                actions={
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className='px-3 py-1 border border-gray-300 rounded text-sm'
-                  >
-                    <option value='name'>Sort by Name</option>
-                    <option value='city'>Sort by City</option>
-                    <option value='state'>Sort by State</option>
-                  </select>
-                }
+                viewMode={viewMode}
               />
             </div>
           </div>
