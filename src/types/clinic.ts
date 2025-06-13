@@ -27,6 +27,7 @@ export interface Clinic {
   instagram_url?: string | null;
   created_at?: string;
   updated_at?: string;
+  verification_status?: 'pending' | 'verified' | 'rejected';
 }
 
 export interface SearchFilters {
