@@ -7,19 +7,16 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params;
-    console.log('API: Looking for post with slug:', resolvedParams.slug);
 
     const post = getPostBySlug(resolvedParams.slug);
 
     if (!post) {
-      console.log('API: Post not found for slug:', resolvedParams.slug);
       return NextResponse.json(
         { error: 'Post not found', slug: resolvedParams.slug },
         { status: 404 }
       );
     }
 
-    console.log('API: Found post:', post.title);
     return NextResponse.json(post);
   } catch (error) {
     console.error('API: Error loading post:', error);

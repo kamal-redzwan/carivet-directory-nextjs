@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Clinic } from '@/types/clinic';
@@ -45,19 +45,12 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function AdminClinicDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth(); // ✅ GET CURRENT USER FOR PERMISSIONS
+  const { user } = useAuth();
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
-  // ✅ REMOVED DUPLICATE formatAddress FUNCTION
-  // ✅ NOW USING CENTRALIZED UTILITIES
-
-  useEffect(() => {
-    loadClinic();
-  }, [params?.id]);
-
-  const loadClinic = async () => {
+  const loadClinic = useCallback(async () => {
     if (!params?.id) return;
 
     try {
@@ -76,7 +69,11 @@ export default function AdminClinicDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params?.id]); // Add params.id as dependency
+
+  useEffect(() => {
+    loadClinic();
+  }, [loadClinic]); // Now loadClinic is properly included
 
   const handleDelete = async () => {
     if (!clinic || !canDeleteClinics(user)) {

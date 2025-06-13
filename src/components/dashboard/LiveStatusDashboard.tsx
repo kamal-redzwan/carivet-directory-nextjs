@@ -8,7 +8,6 @@ import {
   Shield,
   MapPin,
   TrendingUp,
-  Users,
   Building,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +22,6 @@ import {
   getClinicStatus,
   formatAddress,
   getTodayHours,
-  searchClinics,
 } from '@/utils/formatters';
 
 interface LiveStatusDashboardProps {
@@ -111,7 +109,7 @@ export function LiveStatusDashboard({
   // ✅ RECENTLY OPENED/CLOSED CLINICS
   const recentStatusChanges = useMemo(() => {
     const now = currentTime;
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const _oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
     return clinics
       .map((clinic) => ({
@@ -176,160 +174,162 @@ export function LiveStatusDashboard({
             <Activity
               className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-pulse' : ''}`}
             />
-            {autoRefresh ? 'Live' : 'Paused'}
+            {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
           </Button>
           <Button
             variant='outline'
             size='sm'
             onClick={() => setCurrentTime(new Date())}
           >
+            <Clock className='h-4 w-4 mr-2' />
             Refresh Now
           </Button>
         </div>
       </div>
 
-      {/* ✅ MAIN STATUS CARDS */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      {/* ✅ OVERVIEW STATS */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Clinics</CardTitle>
-            <Building className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>{stats.total}</div>
-            <p className='text-xs text-muted-foreground'>
-              Registered veterinary clinics
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Currently Open
-            </CardTitle>
-            <Clock className='h-4 w-4 text-green-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-green-600'>
-              {stats.open}
-            </div>
-            <div className='flex items-center gap-2'>
-              <Progress value={stats.openPercentage} className='flex-1 h-2' />
-              <span className='text-xs text-muted-foreground'>
-                {stats.openPercentage}%
-              </span>
+          <CardContent className='p-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm font-medium text-gray-600'>
+                  Total Clinics
+                </p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  {stats.total}
+                </p>
+              </div>
+              <Building className='h-8 w-8 text-blue-600' />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Currently Closed
-            </CardTitle>
-            <Clock className='h-4 w-4 text-gray-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-gray-600'>
-              {stats.closed}
+          <CardContent className='p-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm font-medium text-gray-600'>Open Now</p>
+                <p className='text-2xl font-bold text-green-600'>
+                  {stats.open}
+                </p>
+                <p className='text-xs text-gray-500'>
+                  {stats.openPercentage}% of total
+                </p>
+              </div>
+              <Clock className='h-8 w-8 text-green-600' />
             </div>
-            <p className='text-xs text-muted-foreground'>
-              Will reopen tomorrow or later today
-            </p>
+            <div className='mt-2'>
+              <Progress value={stats.openPercentage} className='h-2' />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Emergency Services
-            </CardTitle>
-            <Shield className='h-4 w-4 text-red-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-red-600'>
-              {stats.emergency}
+          <CardContent className='p-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm font-medium text-gray-600'>Closed</p>
+                <p className='text-2xl font-bold text-gray-600'>
+                  {stats.closed}
+                </p>
+              </div>
+              <Clock className='h-8 w-8 text-gray-400' />
             </div>
-            <p className='text-xs text-muted-foreground'>
-              24/7 emergency care available
-            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className='p-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm font-medium text-gray-600'>Emergency</p>
+                <p className='text-2xl font-bold text-red-600'>
+                  {stats.emergency}
+                </p>
+              </div>
+              <Shield className='h-8 w-8 text-red-600' />
+            </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* ✅ STATE-WISE BREAKDOWN & EMERGENCY SERVICES */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-        {/* ✅ STATE-WISE BREAKDOWN */}
+        {/* State-wise Breakdown */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <MapPin className='h-5 w-5' />
-              Status by State
+              By State
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
-              {stateStats.slice(0, 6).map((stateStat) => (
-                <div
-                  key={stateStat.state}
-                  className='flex items-center justify-between'
-                >
-                  <div className='flex-1'>
-                    <div className='flex items-center justify-between'>
-                      <span className='font-medium text-sm'>
-                        {stateStat.state}
-                      </span>
-                      <span className='text-xs text-gray-500'>
-                        {stateStat.open}/{stateStat.total} open
-                      </span>
-                    </div>
-                    <div className='flex items-center gap-2 mt-1'>
-                      <Progress
-                        value={
-                          stateStat.total > 0
-                            ? (stateStat.open / stateStat.total) * 100
-                            : 0
-                        }
-                        className='flex-1 h-2'
-                      />
-                      {stateStat.emergency > 0 && (
+              {stateStats.map((state) => (
+                <div key={state.state} className='space-y-2'>
+                  <div className='flex items-center justify-between'>
+                    <span className='font-medium'>{state.state}</span>
+                    <div className='flex items-center gap-2'>
+                      <Badge variant='outline' className='text-xs'>
+                        {state.open}/{state.total} Open
+                      </Badge>
+                      {state.emergency > 0 && (
                         <Badge variant='destructive' className='text-xs'>
-                          {stateStat.emergency} Emergency
+                          {state.emergency} Emergency
                         </Badge>
                       )}
                     </div>
                   </div>
+                  <Progress
+                    value={
+                      state.total > 0
+                        ? Math.round((state.open / state.total) * 100)
+                        : 0
+                    }
+                    className='h-2'
+                  />
                 </div>
               ))}
+
+              {stateStats.length === 0 && (
+                <p className='text-sm text-gray-500 text-center py-4'>
+                  No clinic data available
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* ✅ EMERGENCY SERVICES STATUS */}
+        {/* Emergency Services */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
-              <Shield className='h-5 w-5 text-red-600' />
+              <Shield className='h-5 w-5' />
               Emergency Services
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className='space-y-3'>
-              {emergencyServices.slice(0, 5).map((clinic) => (
+              {emergencyServices.slice(0, 6).map((clinic) => (
                 <div
                   key={clinic.id}
-                  className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'
+                  className='flex items-center justify-between p-3 border border-gray-200 rounded-lg'
                 >
-                  <div className='flex-1'>
-                    <div className='font-medium text-sm'>{clinic.name}</div>
-                    <div className='text-xs text-gray-600'>
-                      {formatAddress(clinic, { includePostcode: false })}
-                    </div>
-                    <div className='text-xs text-gray-500 mt-1'>
-                      {clinic.emergency_hours || 'Call for emergency hours'}
+                  <div className='flex items-center gap-3'>
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        clinic.isOpen ? 'bg-green-400' : 'bg-red-400'
+                      }`}
+                    />
+                    <div>
+                      <div className='font-medium text-sm'>{clinic.name}</div>
+                      <div className='text-xs text-gray-600'>
+                        {formatAddress(clinic)}
+                      </div>
                     </div>
                   </div>
-                  <div className='flex items-center gap-2'>
+                  <div className='text-right'>
                     <Badge
                       variant={clinic.isOpen ? 'default' : 'secondary'}
                       className={`text-xs ${

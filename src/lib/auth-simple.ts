@@ -42,7 +42,6 @@ export class SimpleAuthService {
         .eq('user_id', userId)
         .single();
 
-      console.log('Admin user query result:', { data, error });
       return { data, error };
     } catch (error) {
       console.error('Error checking admin user:', error);

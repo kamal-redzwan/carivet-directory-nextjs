@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
@@ -38,7 +30,7 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
@@ -48,7 +40,7 @@ export function DataTable<T extends Record<string, any>>({
   selectable = false,
   selectedItems = [],
   onSelectionChange,
-  getItemId = (item) => item.id,
+  getItemId = (item) => (item as { id: string }).id,
   filters,
   actions,
   emptyMessage = 'No data found',
@@ -182,9 +174,9 @@ export function DataTable<T extends Record<string, any>>({
                               sortable &&
                               sortColumn === column.key &&
                               (sortDirection === 'asc' ? (
-                                <ChevronUp size={16} />
+                                <ChevronUp className='h-4 w-4' />
                               ) : (
-                                <ChevronDown size={16} />
+                                <ChevronDown className='h-4 w-4' />
                               ))}
                           </div>
                         </th>
@@ -225,18 +217,19 @@ export function DataTable<T extends Record<string, any>>({
             </div>
 
             {/* Mobile Cards */}
-            <div className='lg:hidden space-y-4'>
+            <div className='block lg:hidden space-y-4'>
               {sortedData.map((item, index) => (
                 <Card key={getItemId(item)} className='p-4'>
-                  <div className='space-y-3'>
+                  <div className='space-y-2'>
                     {selectable && (
-                      <div className='flex justify-end'>
+                      <div className='flex items-center mb-3'>
                         <input
                           type='checkbox'
                           checked={selectedItems.includes(getItemId(item))}
                           onChange={() => handleSelectItem(getItemId(item))}
-                          className='rounded border-gray-300'
+                          className='rounded border-gray-300 mr-2'
                         />
+                        <span className='text-sm text-gray-600'>Select</span>
                       </div>
                     )}
                     {columns.map((column) => (
@@ -259,7 +252,8 @@ export function DataTable<T extends Record<string, any>>({
               ))}
             </div>
 
-            {sortedData.length === 0 && (
+            {/* Empty State */}
+            {sortedData.length === 0 && !loading && (
               <div className='text-center py-12'>
                 <p className='text-gray-500'>{emptyMessage}</p>
               </div>

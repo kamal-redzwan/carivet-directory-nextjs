@@ -394,9 +394,6 @@ export default function EnhancedEditClinicPage() {
     setSaveSuccess(false);
 
     try {
-      // Log the clinic ID for debugging
-      console.log('Updating clinic with ID:', clinic.id);
-
       // First, check if the clinic exists
       const { data: existingClinic, error: checkError } = await supabase
         .from('clinics')
@@ -430,8 +427,6 @@ export default function EnhancedEditClinicPage() {
         updated_at: new Date().toISOString(),
       };
 
-      console.log('Update data:', updateData);
-
       // Perform the update without requiring .single()
       const { data, error } = await supabase
         .from('clinics')
@@ -452,7 +447,6 @@ export default function EnhancedEditClinicPage() {
 
       // Get the updated clinic data
       const updatedClinic = data[0];
-      console.log('Successfully updated clinic:', updatedClinic);
 
       setClinic(updatedClinic);
       setOriginalData(formData);

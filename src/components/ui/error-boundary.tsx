@@ -74,21 +74,15 @@ export function ErrorDisplay({
         {/* Action Buttons */}
         <div className='flex flex-col sm:flex-row gap-3 justify-center'>
           {onReset && (
-            <Button
-              onClick={onReset}
-              variant='emerald'
-              leftIcon={<RefreshCw size={16} />}
-            >
+            <Button onClick={onReset} className='flex items-center gap-2'>
+              <RefreshCw className='w-4 h-4' />
               Try Again
             </Button>
           )}
 
-          <Button
-            asChild
-            variant='outline'
-            leftIcon={<Home size={16} />}
-          >
-            <Link href='/'>
+          <Button variant='outline' asChild>
+            <Link href='/' className='flex items-center gap-2'>
+              <Home className='w-4 h-4' />
               Go Home
             </Link>
           </Button>
@@ -97,34 +91,28 @@ export function ErrorDisplay({
         {/* Error Details (Development Only) */}
         {showDetails && error && (
           <details className='mt-8 text-left bg-gray-50 rounded-lg p-4'>
-            <summary className='cursor-pointer text-sm font-medium text-gray-700 mb-2'>
+            <summary className='font-medium text-gray-900 cursor-pointer mb-2'>
               Error Details
             </summary>
-            <div className='space-y-4 text-xs'>
+            <div className='text-sm text-gray-700 space-y-2'>
               <div>
-                <h4 className='font-semibold text-gray-900 mb-1'>Error:</h4>
-                <pre className='bg-red-50 p-2 rounded text-red-800 overflow-auto'>
-                  {error.name}: {error.message}
-                </pre>
+                <strong>Error:</strong> {error.name}
               </div>
-
+              <div>
+                <strong>Message:</strong> {error.message}
+              </div>
               {error.stack && (
                 <div>
-                  <h4 className='font-semibold text-gray-900 mb-1'>
-                    Stack Trace:
-                  </h4>
-                  <pre className='bg-gray-100 p-2 rounded text-gray-700 overflow-auto whitespace-pre-wrap'>
+                  <strong>Stack Trace:</strong>
+                  <pre className='mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto whitespace-pre-wrap'>
                     {error.stack}
                   </pre>
                 </div>
               )}
-
               {errorInfo?.componentStack && (
                 <div>
-                  <h4 className='font-semibold text-gray-900 mb-1'>
-                    Component Stack:
-                  </h4>
-                  <pre className='bg-gray-100 p-2 rounded text-gray-700 overflow-auto whitespace-pre-wrap'>
+                  <strong>Component Stack:</strong>
+                  <pre className='mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto whitespace-pre-wrap'>
                     {errorInfo.componentStack}
                   </pre>
                 </div>
@@ -148,7 +136,6 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    // Update state so the next render will show the fallback UI
     return {
       hasError: true,
       error,
@@ -156,10 +143,8 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console or external service
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
-    // Update state with error info
     this.setState({
       error,
       errorInfo,
@@ -170,21 +155,18 @@ export class ErrorBoundary extends Component<
   }
 
   handleReset = () => {
-    // Reset error state
     this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-
-    // Call custom reset handler if provided
     this.props.onReset?.();
   };
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI
+      // Use custom fallback if provided
       if (this.props.fallback && this.state.error) {
         return this.props.fallback(this.state.error, this.handleReset);
       }
 
-      // Default fallback UI
+      // Default error display
       return (
         <ErrorDisplay
           error={this.state.error}
@@ -200,43 +182,19 @@ export class ErrorBoundary extends Component<
   }
 }
 
-// Hook-based error boundary for functional components
+// Hook for functional components to handle errors
 export function useErrorHandler() {
-  return (error: Error, errorInfo?: ErrorInfo) => {
+  const handleError = (error: Error, errorInfo?: ErrorInfo) => {
     console.error('Error caught by error handler:', error, errorInfo);
-    // You could integrate with error reporting services here
-    throw error;
+
+    // In a real app, you might want to send this to an error reporting service
+    // like Sentry, LogRocket, etc.
   };
+
+  return handleError;
 }
 
-// Simple error fallback components
-export const SimpleErrorFallback = ({
-  error,
-  onReset,
-}: {
-  error: Error;
-  onReset: () => void;
-}) => (
-  <div className='p-4 border border-red-200 bg-red-50 rounded-lg'>
-    <h3 className='text-red-800 font-medium mb-2'>Something went wrong</h3>
-    <p className='text-red-700 text-sm mb-3'>{error.message}</p>
-    <Button
-      onClick={onReset}
-      variant='destructive'
-      size='sm'
-    >
-      Try again
-    </Button>
-  </div>
-);
-
-export const MinimalErrorFallback = () => (
-  <div className='p-4 text-center text-gray-500'>
-    <p>Unable to load content</p>
-  </div>
-);
-
-// Higher-order component for wrapping components with error boundary
+// HOC for wrapping components with error boundary
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
@@ -253,6 +211,3 @@ export function withErrorBoundary<P extends object>(
 
   return WrappedComponent;
 }
-
-// Export types
-export type { ErrorBoundaryProps, ErrorDisplayProps };

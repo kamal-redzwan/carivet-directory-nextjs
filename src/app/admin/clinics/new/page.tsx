@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/common/FormField';
 import { FormLoading } from '@/components/ui/LoadingComponents';
-import { Shield, Mail, Lock } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useForm } from '@/hooks/useForm';
 import { adminSignInSchema } from '@/utils/validators';
 
@@ -86,21 +86,8 @@ export function SignInForm() {
             disabled={!form.isValid}
             className='relative'
           >
-            {form.loading ? 'Signing in...' : 'Sign In'}
+            {form.loading ? <FormLoading /> : 'Sign In'}
           </Button>
-
-          {/* Form Status */}
-          <FormLoading
-            loading={form.loading}
-            success={false}
-            error={form.errors.email || form.errors.password}
-          />
-
-          <div className='text-center'>
-            <p className='text-xs text-gray-500'>
-              Need access? Contact your system administrator
-            </p>
-          </div>
         </form>
       </div>
     </div>

@@ -49,8 +49,8 @@ export default function ContactUsPage() {
     initialValues,
     validationSchema: contactFormSchema,
     onSubmit: async (values) => {
-      console.log('Form submitted:', values);
-      // Simulate API call
+      // In production, send to API endpoint
+      // For now, simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Reset form on success
@@ -68,24 +68,23 @@ export default function ContactUsPage() {
       <SimpleHero
         title='Contact Us'
         subtitle="Have questions, suggestions, or feedback? We'd love to hear from you!"
-        size='md'
       />
 
       {/* Main Content */}
-      <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
+      <div className='container mx-auto px-4 py-12'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
           {/* Contact Form */}
           <div>
             <h2 className='text-2xl font-bold text-gray-900 mb-6'>
-              Send Us a Message
+              Send us a Message
             </h2>
 
-            <form onSubmit={form.handleSubmit} className='space-y-6'>
+            <form className='space-y-6' onSubmit={form.handleSubmit}>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <FormField
                   label='First Name'
                   type='text'
-                  placeholder='Enter your first name'
+                  placeholder='John'
                   value={form.values.firstName}
                   onChange={(value) => form.handleChange('firstName', value)}
                   onBlur={() => form.handleBlur('firstName')}
@@ -96,7 +95,7 @@ export default function ContactUsPage() {
                 <FormField
                   label='Last Name'
                   type='text'
-                  placeholder='Enter your last name'
+                  placeholder='Doe'
                   value={form.values.lastName}
                   onChange={(value) => form.handleChange('lastName', value)}
                   onBlur={() => form.handleBlur('lastName')}
@@ -105,35 +104,38 @@ export default function ContactUsPage() {
                 />
               </div>
 
-              <FormField
-                label='Email Address'
-                type='email'
-                placeholder='your.email@example.com'
-                value={form.values.email}
-                onChange={(value) => form.handleChange('email', value)}
-                onBlur={() => form.handleBlur('email')}
-                error={form.errors.email}
-                required
-              />
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <FormField
+                  label='Email Address'
+                  type='email'
+                  placeholder='john@example.com'
+                  value={form.values.email}
+                  onChange={(value) => form.handleChange('email', value)}
+                  onBlur={() => form.handleBlur('email')}
+                  error={form.errors.email}
+                  required
+                />
 
-              <FormField
-                label='Phone Number'
-                type='tel'
-                placeholder='+60 3-1234 5678'
-                value={form.values.phone}
-                onChange={(value) => form.handleChange('phone', value)}
-                onBlur={() => form.handleBlur('phone')}
-                error={form.errors.phone}
-                description='Optional - we may call you for follow-up'
-              />
+                <FormField
+                  label='Phone Number'
+                  type='tel'
+                  placeholder='01X-XXX XXXX'
+                  value={form.values.phone}
+                  onChange={(value) => form.handleChange('phone', value)}
+                  onBlur={() => form.handleBlur('phone')}
+                  error={form.errors.phone}
+                  description='Optional'
+                />
+              </div>
 
               <SelectField
                 label='Subject'
-                placeholder='Select a subject'
+                options={subjectOptions}
                 value={form.values.subject}
                 onChange={(value) => form.handleChange('subject', value)}
-                options={subjectOptions}
+                onBlur={() => form.handleBlur('subject')}
                 error={form.errors.subject}
+                placeholder='Select a subject'
                 required
               />
 
@@ -223,7 +225,14 @@ export default function ContactUsPage() {
                   </div>
                   <div>
                     <h3 className='font-semibold text-gray-900 mb-1'>Phone</h3>
-                    <p className='text-gray-600 text-sm'>+603 1234 5678</p>
+                    <p className='text-gray-600 text-sm'>
+                      <a
+                        href='tel:+60312345678'
+                        className='hover:text-emerald-600 transition-colors'
+                      >
+                        +60 3-1234 5678
+                      </a>
+                    </p>
                   </div>
                 </div>
 
@@ -234,7 +243,14 @@ export default function ContactUsPage() {
                   </div>
                   <div>
                     <h3 className='font-semibold text-gray-900 mb-1'>Email</h3>
-                    <p className='text-gray-600 text-sm'>contact@carivet.my</p>
+                    <p className='text-gray-600 text-sm'>
+                      <a
+                        href='mailto:hello@carivet.my'
+                        className='hover:text-emerald-600 transition-colors'
+                      >
+                        hello@carivet.my
+                      </a>
+                    </p>
                   </div>
                 </div>
 
@@ -249,16 +265,60 @@ export default function ContactUsPage() {
                     </h3>
                     <div className='text-gray-600 text-sm space-y-1'>
                       <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-                      <p>Saturday: 10:00 AM - 2:00 PM</p>
+                      <p>Saturday: 9:00 AM - 1:00 PM</p>
                       <p>Sunday: Closed</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* FAQ Section */}
+            <div>
+              <h2 className='text-2xl font-bold text-gray-900 mb-6'>
+                Frequently Asked Questions
+              </h2>
+
+              <div className='space-y-4'>
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-2'>
+                    How do I list my veterinary clinic?
+                  </h4>
+                  <p className='text-gray-600 text-sm'>
+                    You can submit your clinic information through our contact
+                    form by selecting "Clinic Listing" as the subject. We'll
+                    review your submission and get back to you within 2-3
+                    business days.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-2'>
+                    Is CariVet free to use?
+                  </h4>
+                  <p className='text-gray-600 text-sm'>
+                    Yes! CariVet is completely free for pet owners to search and
+                    find veterinary clinics. We believe in making veterinary
+                    care accessible to all pet owners in Malaysia.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-2'>
+                    How often is the information updated?
+                  </h4>
+                  <p className='text-gray-600 text-sm'>
+                    We continuously update our database with the latest
+                    information from veterinary clinics. If you notice any
+                    outdated information, please let us know through our contact
+                    form.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </HeroPageLayout>
   );
 }

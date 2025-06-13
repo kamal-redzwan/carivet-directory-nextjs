@@ -78,8 +78,8 @@ export default function AdminDashboardPage() {
   // ✅ LOAD ALL CLINICS FOR LIVE DASHBOARD
   const {
     data: allClinics,
-    loading: clinicsLoading,
-    error: clinicsError,
+    loading: _clinicsLoading,
+    error: _clinicsError,
     refetch: refetchClinics,
   } = useSupabaseQuery<Clinic[]>(
     async () => {
@@ -226,76 +226,38 @@ export default function AdminDashboardPage() {
                   <div className='p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left cursor-pointer transition-colors'>
                     <Users className='h-6 w-6 text-blue-600 mb-2' />
                     <h3 className='font-medium'>Manage Users</h3>
-                    <p className='text-sm text-gray-600'>Admin user control</p>
+                    <p className='text-sm text-gray-600'>User administration</p>
                   </div>
                 </Link>
               )}
 
               {canViewClinics(user) && (
-                <Link href='/admin/clinics'>
+                <Link href='/admin/reports'>
                   <div className='p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left cursor-pointer transition-colors'>
-                    <Eye className='h-6 w-6 text-purple-600 mb-2' />
-                    <h3 className='font-medium'>View Clinics</h3>
-                    <p className='text-sm text-gray-600'>Browse all clinics</p>
+                    <FileText className='h-6 w-6 text-purple-600 mb-2' />
+                    <h3 className='font-medium'>Reports</h3>
+                    <p className='text-sm text-gray-600'>View analytics</p>
                   </div>
                 </Link>
               )}
 
-              <Link href='/admin/analytics'>
-                <div className='p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left cursor-pointer transition-colors'>
-                  <Activity className='h-6 w-6 text-orange-600 mb-2' />
-                  <h3 className='font-medium'>Analytics</h3>
-                  <p className='text-sm text-gray-600'>View system metrics</p>
-                </div>
-              </Link>
+              <div className='p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left cursor-pointer transition-colors'>
+                <Activity className='h-6 w-6 text-orange-600 mb-2' />
+                <h3 className='font-medium'>System Status</h3>
+                <p className='text-sm text-gray-600'>Monitor health</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* ✅ ENHANCED PERMISSIONS CARD */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Permissions</CardTitle>
+            <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='space-y-3'>
-              {Object.entries(user.permissions).map(([resource, actions]) => (
-                <div
-                  key={resource}
-                  className='flex justify-between items-center'
-                >
-                  <span className='text-sm font-medium capitalize text-gray-700'>
-                    {resource}:
-                  </span>
-                  <div className='flex gap-1'>
-                    {Array.isArray(actions) ? (
-                      actions.map((action) => (
-                        <span
-                          key={action}
-                          className='text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded'
-                        >
-                          {action}
-                        </span>
-                      ))
-                    ) : (
-                      <span className='text-xs text-gray-500'>No access</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {/* Role Badge */}
-              <div className='pt-2 border-t'>
-                <div className='flex justify-between items-center'>
-                  <span className='text-sm font-medium text-gray-700'>
-                    Role:
-                  </span>
-                  <span className='text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded'>
-                    {user.role.display_name}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <p className='text-gray-600 text-sm'>
+              Activity feed will be displayed here once implemented.
+            </p>
           </CardContent>
         </Card>
       </div>

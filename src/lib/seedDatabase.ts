@@ -15,7 +15,6 @@ export async function seedDatabase() {
     }
 
     if (existingClinics && existingClinics.length > 0) {
-      console.log('Database already has data, skipping seed');
       return { success: true, message: 'Database already seeded' };
     }
 
@@ -31,8 +30,10 @@ export async function seedDatabase() {
       website: clinic.website || null,
       hours: clinic.hours,
       emergency: clinic.emergency,
-      emergency_hours: 'emergency_hours' in clinic ? clinic.emergency_hours : null,
-      emergency_details: 'emergency_details' in clinic ? clinic.emergency_details : null,
+      emergency_hours:
+        'emergency_hours' in clinic ? clinic.emergency_hours : null,
+      emergency_details:
+        'emergency_details' in clinic ? clinic.emergency_details : null,
       animals_treated: clinic.animals_treated,
       specializations: clinic.specializations,
       services_offered: clinic.services_offered,
@@ -51,7 +52,6 @@ export async function seedDatabase() {
       return { success: false, error: error.message };
     }
 
-    console.log('Successfully seeded database with', data?.length, 'clinics');
     return {
       success: true,
       message: `Successfully added ${data?.length} clinics to database`,

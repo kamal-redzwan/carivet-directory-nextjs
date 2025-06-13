@@ -8,7 +8,6 @@ import {
   Clock,
   Shield,
   Globe,
-  Star,
   Navigation,
   Filter,
 } from 'lucide-react';
@@ -33,6 +32,7 @@ interface EnhancedClinicGridProps {
   loading?: boolean;
   viewMode?: 'grid' | 'list';
   showFilters?: boolean;
+  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
 interface ClinicCardProps {
@@ -42,7 +42,7 @@ interface ClinicCardProps {
 
 function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
   // ✅ USE CENTRALIZED STATUS LOGIC
-  const statusInfo = getClinicStatus(clinic);
+  const _statusInfo = getClinicStatus(clinic);
   const isOpen = isCurrentlyOpen(clinic.hours);
   const todayHours = getTodayHours(clinic.hours);
   const address = formatAddress(clinic);
@@ -265,24 +265,15 @@ function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
                   : 'bg-gray-100 text-gray-600'
               }`}
             >
-              {isOpen ? 'Open' : 'Closed'}
+              {isOpen ? 'Open Now' : 'Closed'}
             </Badge>
           </div>
         </CardHeader>
-      </Link>
 
-      <CardContent className='pt-0'>
-        <div className='space-y-3'>
-          {/* Hours */}
-          <div className='flex items-center gap-2 text-sm text-gray-600'>
-            <Clock size={14} />
-            <span>Today: {todayHours}</span>
-          </div>
-
-          {/* Services Preview */}
+        <CardContent className='pt-0'>
+          {/* ✅ SERVICES PREVIEW */}
           {clinic.animals_treated && clinic.animals_treated.length > 0 && (
-            <div>
-              <p className='text-xs font-medium text-gray-500 mb-1'>ANIMALS:</p>
+            <div className='mb-3'>
               <div className='flex flex-wrap gap-1'>
                 {clinic.animals_treated.slice(0, 3).map((animal) => (
                   <Badge key={animal} variant='outline' className='text-xs'>
@@ -298,61 +289,30 @@ function EnhancedClinicCard({ clinic, viewMode }: ClinicCardProps) {
             </div>
           )}
 
-          {/* Specializations Preview */}
-          {clinic.specializations && clinic.specializations.length > 0 && (
-            <div>
-              <p className='text-xs font-medium text-gray-500 mb-1'>
-                SPECIALIZATIONS:
-              </p>
-              <div className='flex flex-wrap gap-1'>
-                {clinic.specializations.slice(0, 2).map((spec) => (
-                  <Badge
-                    key={spec}
-                    variant='secondary'
-                    className='text-xs bg-emerald-50 text-emerald-700'
-                  >
-                    {spec}
-                  </Badge>
-                ))}
-                {clinic.specializations.length > 2 && (
-                  <Badge variant='secondary' className='text-xs'>
-                    +{clinic.specializations.length - 2}
-                  </Badge>
-                )}
+          {/* ✅ CONTACT INFO */}
+          <div className='space-y-2 text-sm text-gray-600'>
+            <div className='flex items-center gap-1'>
+              <Clock size={12} />
+              <span>Today: {todayHours}</span>
+            </div>
+            {clinic.phone && (
+              <div className='flex items-center gap-1'>
+                <Phone size={12} />
+                <span>{formatPhone(clinic.phone)}</span>
               </div>
+            )}
+          </div>
+
+          {/* ✅ EMERGENCY ALERT */}
+          {clinic.emergency && clinic.emergency_details && (
+            <div className='mt-3 p-2 bg-red-50 border border-red-200 rounded'>
+              <p className='text-xs text-red-800'>
+                <strong>Emergency:</strong> {clinic.emergency_details}
+              </p>
             </div>
           )}
-        </div>
-
-        {/* Actions */}
-        <div className='flex gap-2 mt-4'>
-          {clinic.phone && (
-            <Button variant='outline' size='sm' className='flex-1' asChild>
-              <a
-                href={`tel:${formatPhone(clinic.phone, { format: 'tel' })}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Phone size={14} className='mr-1' />
-                Call
-              </a>
-            </Button>
-          )}
-
-          <Button variant='outline' size='sm' className='flex-1' asChild>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                formatAddressForMaps(clinic)
-              )}`}
-              target='_blank'
-              rel='noopener noreferrer'
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Navigation size={14} className='mr-1' />
-              Map
-            </a>
-          </Button>
-        </div>
-      </CardContent>
+        </CardContent>
+      </Link>
     </Card>
   );
 }
@@ -361,45 +321,50 @@ export function EnhancedClinicGrid({
   clinics,
   loading = false,
   viewMode = 'grid',
+  showFilters = true,
 }: EnhancedClinicGridProps) {
-  const [sortBy, setSortBy] = useState<'name' | 'distance' | 'status'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'status'>('name');
 
-  // ✅ SORT CLINICS WITH ENHANCED LOGIC
+  // ✅ SORT CLINICS
   const sortedClinics = useMemo(() => {
-    return [...clinics].sort((a, b) => {
-      switch (sortBy) {
-        case 'status':
-          // Sort by: Emergency first, then Open, then Closed
-          const aStatus = a.emergency ? 3 : isCurrentlyOpen(a.hours) ? 2 : 1;
-          const bStatus = b.emergency ? 3 : isCurrentlyOpen(b.hours) ? 2 : 1;
-          if (aStatus !== bStatus) return bStatus - aStatus;
-          return a.name.localeCompare(b.name);
+    if (!clinics) return [];
 
-        case 'name':
-        default:
-          return a.name.localeCompare(b.name);
+    return [...clinics].sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
       }
+
+      // Sort by status (Emergency > Open > Closed)
+      const getStatusPriority = (clinic: Clinic) => {
+        if (clinic.emergency) return 3;
+        if (isCurrentlyOpen(clinic.hours)) return 2;
+        return 1;
+      };
+
+      const priorityA = getStatusPriority(a);
+      const priorityB = getStatusPriority(b);
+
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA; // Descending order
+      }
+
+      // Secondary sort by name
+      return a.name.localeCompare(b.name);
     });
   }, [clinics, sortBy]);
 
   if (loading) {
     return (
       <div className='space-y-4'>
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className='animate-pulse'>
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className='animate-pulse'>
             <CardContent className='p-6'>
-              <div className='flex items-start justify-between'>
-                <div className='flex-1 space-y-3'>
-                  <div className='h-6 bg-gray-200 rounded w-3/4'></div>
-                  <div className='h-4 bg-gray-200 rounded w-1/2'></div>
-                  <div className='flex gap-2'>
-                    <div className='h-6 bg-gray-200 rounded w-16'></div>
-                    <div className='h-6 bg-gray-200 rounded w-16'></div>
-                  </div>
-                </div>
-                <div className='space-y-2'>
-                  <div className='h-8 bg-gray-200 rounded w-20'></div>
-                  <div className='h-8 bg-gray-200 rounded w-20'></div>
+              <div className='space-y-3'>
+                <div className='h-6 bg-gray-200 rounded w-3/4'></div>
+                <div className='h-4 bg-gray-200 rounded w-1/2'></div>
+                <div className='flex gap-2'>
+                  <div className='h-6 bg-gray-200 rounded w-16'></div>
+                  <div className='h-6 bg-gray-200 rounded w-20'></div>
                 </div>
               </div>
             </CardContent>
@@ -409,17 +374,17 @@ export function EnhancedClinicGrid({
     );
   }
 
-  if (clinics.length === 0) {
+  if (!clinics || clinics.length === 0) {
     return (
       <div className='text-center py-12'>
-        <div className='text-gray-400 mb-4'>
-          <Filter size={48} className='mx-auto' />
+        <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+          <Filter className='h-8 w-8 text-gray-400' />
         </div>
         <h3 className='text-lg font-semibold text-gray-900 mb-2'>
           No clinics found
         </h3>
         <p className='text-gray-600'>
-          Try adjusting your search filters to find more results.
+          Try adjusting your search criteria to find clinics in your area.
         </p>
       </div>
     );
@@ -428,22 +393,24 @@ export function EnhancedClinicGrid({
   return (
     <div className='space-y-4'>
       {/* Sort Controls */}
-      <div className='flex items-center justify-between'>
-        <p className='text-sm text-gray-600'>
-          Showing {clinics.length} clinic{clinics.length !== 1 ? 's' : ''}
-        </p>
-        <div className='flex items-center gap-2'>
-          <span className='text-sm text-gray-600'>Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className='text-sm border border-gray-300 rounded px-2 py-1'
-          >
-            <option value='name'>Name</option>
-            <option value='status'>Status (Emergency, Open, Closed)</option>
-          </select>
+      {showFilters && (
+        <div className='flex items-center justify-between'>
+          <p className='text-sm text-gray-600'>
+            Showing {clinics.length} clinic{clinics.length !== 1 ? 's' : ''}
+          </p>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-gray-600'>Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'status')}
+              className='text-sm border border-gray-300 rounded px-2 py-1'
+            >
+              <option value='name'>Name</option>
+              <option value='status'>Status (Emergency, Open, Closed)</option>
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Clinic Cards */}
       <div

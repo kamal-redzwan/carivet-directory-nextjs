@@ -34,10 +34,8 @@ export default function BlogPostPage() {
   const loadPost = useCallback(async (slug: string) => {
     try {
       setLoading(true);
-      console.log('Loading post with slug:', slug);
 
       const response = await fetch(`/api/blog/posts/${slug}`);
-      console.log('API response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -46,13 +44,10 @@ export default function BlogPostPage() {
       }
 
       const postData = await response.json();
-      console.log('Post data received:', postData.title);
       setPost(postData);
 
       // Serialize MDX content
-      console.log('Serializing MDX content...');
       const mdxSource = await serialize(postData.content);
-      console.log('MDX serialization complete');
       setMdxSource(mdxSource);
     } catch (err) {
       console.error('Error loading post:', err);

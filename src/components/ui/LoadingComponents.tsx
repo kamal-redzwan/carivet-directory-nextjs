@@ -1,342 +1,244 @@
-// Enhanced Loading Components - Building on existing loading.tsx
-import React, { ReactNode } from 'react';
+// src/components/ui/LoadingComponents.tsx
+'use client';
+
+import { useState, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { LoadingSpinner, LoadingSkeleton } from './loading';
 
-// Progress Bar Component
-interface LoadingProgressProps {
-  /** Progress percentage (0-100) */
-  progress: number;
-  /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
-  /** Color variant */
-  variant?: 'emerald' | 'blue' | 'purple' | 'gray';
-  /** Show percentage text */
-  showPercent?: boolean;
-  /** Additional label */
-  label?: string;
-  /** Additional CSS classes */
-  className?: string;
-}
+// ============================================================================
+// LOADING SPINNER
+// ============================================================================
 
-export function LoadingProgress({
-  progress,
-  size = 'md',
-  variant = 'emerald',
-  showPercent = false,
-  label,
-  className
-}: LoadingProgressProps) {
-  const sizeClasses = {
-    sm: 'h-1',
-    md: 'h-2',
-    lg: 'h-3'
-  };
-
-  const variantClasses = {
-    emerald: 'bg-emerald-600',
-    blue: 'bg-blue-600',
-    purple: 'bg-purple-600',
-    gray: 'bg-gray-600'
-  };
-
-  const clampedProgress = Math.min(100, Math.max(0, progress));
-
-  return (
-    <div className={cn('w-full', className)}>
-      {(label || showPercent) && (
-        <div className="flex justify-between items-center mb-2">
-          {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
-          {showPercent && <span className="text-sm text-gray-500">{Math.round(clampedProgress)}%</span>}
-        </div>
-      )}
-      <div className={cn('w-full bg-gray-200 rounded-full overflow-hidden', sizeClasses[size])}>
-        <div
-          className={cn('h-full transition-all duration-300 ease-out', variantClasses[variant])}
-          style={{ width: `${clampedProgress}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// Loading Dots Component
-interface LoadingDotsProps {
-  /** Size of dots */
-  size?: 'sm' | 'md' | 'lg';
-  /** Color variant */
-  variant?: 'emerald' | 'blue' | 'purple' | 'gray';
-  /** Additional CSS classes */
-  className?: string;
-}
-
-export function LoadingDots({
-  size = 'md',
-  variant = 'emerald',
-  className
-}: LoadingDotsProps) {
-  const sizeClasses = {
-    sm: 'w-1 h-1',
-    md: 'w-2 h-2',
-    lg: 'w-3 h-3'
-  };
-
-  const variantClasses = {
-    emerald: 'bg-emerald-600',
-    blue: 'bg-blue-600',
-    purple: 'bg-purple-600',
-    gray: 'bg-gray-600'
-  };
-
-  const gapClasses = {
-    sm: 'gap-1',
-    md: 'gap-2',
-    lg: 'gap-3'
-  };
-
-  return (
-    <div className={cn('flex items-center', gapClasses[size], className)}>
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className={cn(
-            'rounded-full animate-pulse',
-            sizeClasses[size],
-            variantClasses[variant]
-          )}
-          style={{
-            animationDelay: `${i * 0.15}s`,
-            animationDuration: '0.6s'
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Pulse Loading Component
-interface LoadingPulseProps {
-  /** Size variant */
+interface LoadingSpinnerProps {
+  /** Size of the spinner */
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Shape variant */
-  shape?: 'circle' | 'square' | 'rectangle';
+  /** Color variant */
+  variant?: 'default' | 'primary' | 'white';
   /** Additional CSS classes */
   className?: string;
-  /** Number of pulse elements */
-  count?: number;
+  /** Loading text */
+  text?: string;
 }
 
-export function LoadingPulse({
+export function LoadingSpinner({
   size = 'md',
-  shape = 'circle',
-  count = 1,
-  className
-}: LoadingPulseProps) {
+  variant = 'default',
+  className,
+  text,
+}: LoadingSpinnerProps) {
   const sizeClasses = {
-    sm: shape === 'circle' ? 'w-8 h-8' : shape === 'square' ? 'w-8 h-8' : 'w-16 h-4',
-    md: shape === 'circle' ? 'w-12 h-12' : shape === 'square' ? 'w-12 h-12' : 'w-24 h-6',
-    lg: shape === 'circle' ? 'w-16 h-16' : shape === 'square' ? 'w-16 h-16' : 'w-32 h-8',
-    xl: shape === 'circle' ? 'w-24 h-24' : shape === 'square' ? 'w-24 h-24' : 'w-48 h-12'
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
+    xl: 'w-12 h-12',
   };
 
-  const shapeClasses = {
-    circle: 'rounded-full',
-    square: 'rounded',
-    rectangle: 'rounded'
+  const colorClasses = {
+    default: 'text-gray-600',
+    primary: 'text-blue-600',
+    white: 'text-white',
   };
-
-  const items = Array.from({ length: count }, (_, i) => i);
 
   return (
-    <div className={cn('flex items-center gap-3', className)}>
-      {items.map((i) => (
-        <div
-          key={i}
-          className={cn(
-            'bg-gray-200 animate-pulse',
-            sizeClasses[size],
-            shapeClasses[shape]
-          )}
-        />
+    <div className={cn('flex items-center gap-2', className)}>
+      <div
+        className={cn(
+          'animate-spin rounded-full border-2 border-current border-t-transparent',
+          sizeClasses[size],
+          colorClasses[variant]
+        )}
+        role='status'
+        aria-label='Loading'
+      />
+      {text && (
+        <span className={cn('text-sm', colorClasses[variant])}>{text}</span>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// LOADING SKELETON
+// ============================================================================
+
+interface LoadingSkeletonProps {
+  /** Skeleton variant */
+  variant?: 'text' | 'card' | 'clinic-card' | 'blog-card' | 'circle' | 'rect';
+  /** Number of skeleton items */
+  count?: number;
+  /** Additional CSS classes */
+  className?: string;
+  /** Custom height for rect variant */
+  height?: string;
+  /** Custom width for rect variant */
+  width?: string;
+}
+
+export function LoadingSkeleton({
+  variant = 'text',
+  count = 1,
+  className,
+  height = '4',
+  width = 'full',
+}: LoadingSkeletonProps) {
+  const baseClasses = 'animate-pulse bg-gray-200 rounded';
+
+  const variantClasses = {
+    text: `h-${height} w-${width}`,
+    circle: 'w-12 h-12 rounded-full',
+    rect: `h-${height} w-${width}`,
+    card: 'h-48 w-full',
+    'clinic-card': '',
+    'blog-card': '',
+  };
+
+  if (variant === 'clinic-card') {
+    return (
+      <div className={cn('space-y-4', className)}>
+        {Array.from({ length: count }).map((_, index) => (
+          <div key={index} className='border rounded-lg p-6 space-y-4'>
+            <div className='flex items-start gap-4'>
+              <div className='w-16 h-16 bg-gray-200 rounded-lg animate-pulse' />
+              <div className='flex-1 space-y-2'>
+                <div className='h-5 bg-gray-200 rounded animate-pulse w-3/4' />
+                <div className='h-4 bg-gray-200 rounded animate-pulse w-1/2' />
+                <div className='h-4 bg-gray-200 rounded animate-pulse w-2/3' />
+              </div>
+            </div>
+            <div className='flex gap-2'>
+              <div className='h-6 bg-gray-200 rounded-full animate-pulse w-16' />
+              <div className='h-6 bg-gray-200 rounded-full animate-pulse w-20' />
+              <div className='h-6 bg-gray-200 rounded-full animate-pulse w-24' />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === 'blog-card') {
+    return (
+      <div className={cn('space-y-6', className)}>
+        {Array.from({ length: count }).map((_, index) => (
+          <div key={index} className='border rounded-lg overflow-hidden'>
+            <div className='h-48 bg-gray-200 animate-pulse' />
+            <div className='p-6 space-y-3'>
+              <div className='h-6 bg-gray-200 rounded animate-pulse w-3/4' />
+              <div className='h-4 bg-gray-200 rounded animate-pulse w-full' />
+              <div className='h-4 bg-gray-200 rounded animate-pulse w-2/3' />
+              <div className='flex items-center gap-4 pt-2'>
+                <div className='w-8 h-8 bg-gray-200 rounded-full animate-pulse' />
+                <div className='space-y-1 flex-1'>
+                  <div className='h-3 bg-gray-200 rounded animate-pulse w-1/3' />
+                  <div className='h-3 bg-gray-200 rounded animate-pulse w-1/4' />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('space-y-2', className)}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} className={cn(baseClasses, variantClasses[variant])} />
       ))}
     </div>
   );
 }
 
-// Loading States Component
-interface LoadingStatesProps {
-  /** Current loading state */
-  state: 'idle' | 'loading' | 'success' | 'error';
-  /** Messages for each state */
-  messages?: {
-    loading?: string;
-    success?: string;
-    error?: string;
-  };
-  /** Additional CSS classes */
-  className?: string;
-  /** Children to render when idle */
-  children?: ReactNode;
-}
+// ============================================================================
+// LOADING BUTTON
+// ============================================================================
 
-export function LoadingStates({
-  state,
-  messages = {},
-  className,
-  children
-}: LoadingStatesProps) {
-  const {
-    loading = 'Loading...',
-    success = 'Success!',
-    error = 'Something went wrong'
-  } = messages;
-
-  switch (state) {
-    case 'loading':
-      return (
-        <div className={cn('flex flex-col items-center gap-3', className)}>
-          <LoadingSpinner size="lg" />
-          <p className="text-sm text-gray-600">{loading}</p>
-        </div>
-      );
-
-    case 'success':
-      return (
-        <div className={cn('flex flex-col items-center gap-3', className)}>
-          <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <p className="text-sm text-emerald-600 font-medium">{success}</p>
-        </div>
-      );
-
-    case 'error':
-      return (
-        <div className={cn('flex flex-col items-center gap-3', className)}>
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <p className="text-sm text-red-600 font-medium">{error}</p>
-        </div>
-      );
-
-    default:
-      return <>{children}</>;
-  }
-}
-
-// Search Loading Component
-interface SearchLoadingProps {
+interface LoadingButtonProps {
+  /** Button content when loading */
+  children: ReactNode;
   /** Loading state */
-  loading: boolean;
-  /** Search term */
-  searchTerm?: string;
+  loading?: boolean;
+  /** Loading text override */
+  loadingText?: string;
+  /** Button variant */
+  variant?: 'default' | 'primary' | 'secondary' | 'outline';
   /** Additional CSS classes */
   className?: string;
+  /** Disabled state */
+  disabled?: boolean;
+  /** Click handler */
+  onClick?: () => void;
+  /** Button type */
+  type?: 'button' | 'submit' | 'reset';
 }
 
-export function SearchLoading({
-  loading,
-  searchTerm,
-  className
-}: SearchLoadingProps) {
-  if (!loading) return null;
+export function LoadingButton({
+  children,
+  loading = false,
+  loadingText = 'Loading...',
+  variant = 'default',
+  className,
+  disabled,
+  onClick,
+  type = 'button',
+}: LoadingButtonProps) {
+  const baseClasses =
+    'inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+
+  const variantClasses = {
+    default: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500',
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
+    outline:
+      'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 focus:ring-blue-500',
+  };
 
   return (
-    <div className={cn('flex items-center gap-3 p-4', className)}>
-      <LoadingSpinner size="sm" />
-      <span className="text-sm text-gray-600">
-        {searchTerm ? `Searching for "${searchTerm}"...` : 'Searching...'}
-      </span>
-    </div>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={cn(baseClasses, variantClasses[variant], className)}
+    >
+      {loading && (
+        <LoadingSpinner
+          size='sm'
+          variant={variant === 'primary' ? 'white' : 'default'}
+        />
+      )}
+      {loading ? loadingText : children}
+    </button>
   );
 }
 
-// Form Loading Component
-interface FormLoadingProps {
-  /** Loading state */
-  loading: boolean;
-  /** Success state */
-  success?: boolean;
-  /** Error state */
-  error?: string | null;
-  /** Success message */
-  successMessage?: string;
-  /** Additional CSS classes */
-  className?: string;
-}
+// ============================================================================
+// LOADING IMAGE
+// ============================================================================
 
-export function FormLoading({
-  loading,
-  success,
-  error,
-  successMessage = 'Form submitted successfully!',
-  className
-}: FormLoadingProps) {
-  if (loading) {
-    return (
-      <div className={cn('flex items-center gap-2', className)}>
-        <LoadingSpinner size="sm" />
-        <span className="text-sm text-gray-600">Submitting...</span>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className={cn('flex items-center gap-2 text-emerald-600', className)}>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        <span className="text-sm font-medium">{successMessage}</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={cn('flex items-center gap-2 text-red-600', className)}>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        <span className="text-sm">{error}</span>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-// Image Loading Component
-interface ImageLoadingProps {
+interface LoadingImageProps {
   /** Image source */
   src: string;
   /** Alt text */
   alt: string;
   /** Additional CSS classes */
   className?: string;
-  /** Placeholder content */
+  /** Loading placeholder */
   placeholder?: ReactNode;
-  /** On load callback */
+  /** Load callback */
   onLoad?: () => void;
-  /** On error callback */
+  /** Error callback */
   onError?: () => void;
 }
 
-export function ImageLoading({
+export function LoadingImage({
   src,
   alt,
   className,
   placeholder,
   onLoad,
-  onError
-}: ImageLoadingProps) {
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(false);
+  onError,
+}: LoadingImageProps) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const handleLoad = () => {
     setLoading(false);
@@ -352,13 +254,23 @@ export function ImageLoading({
   return (
     <div className={cn('relative', className)}>
       {(loading || error) && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded flex items-center justify-center">
+        <div className='absolute inset-0 bg-gray-200 animate-pulse rounded flex items-center justify-center'>
           {error ? (
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className='w-8 h-8 text-gray-400'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+              />
             </svg>
           ) : (
-            placeholder || <LoadingSpinner size="md" />
+            placeholder || <LoadingSpinner size='md' />
           )}
         </div>
       )}
@@ -378,7 +290,10 @@ export function ImageLoading({
   );
 }
 
-// Enhanced Loading Grid (for card layouts)
+// ============================================================================
+// LOADING GRID
+// ============================================================================
+
 interface LoadingGridProps {
   /** Number of items */
   count?: number;
@@ -394,17 +309,21 @@ export function LoadingGrid({
   count = 6,
   columns = 3,
   variant = 'clinic',
-  className
+  className,
 }: LoadingGridProps) {
   const gridCols = {
     1: 'grid-cols-1',
     2: 'grid-cols-1 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
   };
 
-  const skeletonVariant = variant === 'clinic' ? 'clinic-card' : 
-                          variant === 'blog' ? 'blog-card' : 'card';
+  const skeletonVariant =
+    variant === 'clinic'
+      ? 'clinic-card'
+      : variant === 'blog'
+      ? 'blog-card'
+      : 'card';
 
   return (
     <div className={cn('grid gap-6', gridCols[columns], className)}>
@@ -413,4 +332,46 @@ export function LoadingGrid({
   );
 }
 
-// Export all components - no need for explicit export since they're already exported inline
+// ============================================================================
+// LOADING OVERLAY
+// ============================================================================
+
+interface LoadingOverlayProps {
+  /** Show overlay */
+  show: boolean;
+  /** Loading text */
+  text?: string;
+  /** Overlay variant */
+  variant?: 'default' | 'blur';
+  /** Additional CSS classes */
+  className?: string;
+  /** Child components */
+  children: ReactNode;
+}
+
+export function LoadingOverlay({
+  show,
+  text = 'Loading...',
+  variant = 'default',
+  className,
+  children,
+}: LoadingOverlayProps) {
+  return (
+    <div className={cn('relative', className)}>
+      {children}
+      {show && (
+        <div
+          className={cn(
+            'absolute inset-0 flex items-center justify-center z-50',
+            variant === 'blur' ? 'backdrop-blur-sm bg-white/70' : 'bg-white/80'
+          )}
+        >
+          <div className='text-center'>
+            <LoadingSpinner size='lg' />
+            {text && <p className='mt-2 text-sm text-gray-600'>{text}</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

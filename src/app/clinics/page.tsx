@@ -19,7 +19,7 @@ import { SearchFilters } from '@/utils/businessLogic';
 export default function ClinicsPage() {
   const [filteredClinics, setFilteredClinics] = useState<Clinic[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentFilters, setCurrentFilters] = useState<SearchFilters>({});
+  const [_currentFilters, setCurrentFilters] = useState<SearchFilters>({});
   const searchParams = useSearchParams();
 
   // ✅ LOAD CLINICS USING EXISTING HOOK
