@@ -13,59 +13,79 @@ import {
   Edit,
   Trash2,
   Phone,
+  Mail,
   Globe,
+  MapPin,
   Clock,
   AlertCircle,
-  Facebook,
-  Instagram,
-  Calendar,
-  PawPrint,
-  Stethoscope,
-  Settings,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
-export default function ViewClinicPage() {
+// ✅ IMPORT CENTRALIZED UTILITIES (replacing duplicate functions)
+import {
+  formatAddress,
+  formatAddressForMaps,
+  formatPhone,
+  getTodayHours,
+  getClinicStatus,
+} from '@/utils/formatters';
+
+// ✅ IMPORT PERMISSION UTILITIES (now available in permissions.ts)
+import {
+  canDeleteClinics,
+  canManageClinics,
+  canViewClinics,
+} from '@/utils/permissions';
+
+// ✅ IMPORT PERMISSION UTILITIES
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function AdminClinicDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth(); // ✅ GET CURRENT USER FOR PERMISSIONS
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // ✅ REMOVED DUPLICATE formatAddress FUNCTION
+  // ✅ NOW USING CENTRALIZED UTILITIES
 
   useEffect(() => {
-    if (params.id) {
-      loadClinic(params.id as string);
-    }
-  }, [params.id]);
+    loadClinic();
+  }, [params?.id]);
 
-  const loadClinic = async (id: string) => {
+  const loadClinic = async () => {
+    if (!params?.id) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
-        .eq('id', id)
+        .eq('id', params.id as string)
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error('Clinic not found');
-
       setClinic(data);
     } catch (error) {
       console.error('Error loading clinic:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to load clinic'
-      );
+      toast.error('Failed to load clinic details');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!clinic) return;
+    if (!clinic || !canDeleteClinics(user)) {
+      toast.error('You do not have permission to delete clinics');
+      return;
+    }
 
     if (
-      !window.confirm(
+      !confirm(
         `Are you sure you want to delete "${clinic.name}"? This action cannot be undone.`
       )
     ) {
@@ -73,6 +93,7 @@ export default function ViewClinicPage() {
     }
 
     try {
+      setDeleting(true);
       const { error } = await supabase
         .from('clinics')
         .delete()
@@ -80,57 +101,51 @@ export default function ViewClinicPage() {
 
       if (error) throw error;
 
-      // Redirect to clinics list
+      toast.success('Clinic deleted successfully');
       router.push('/admin/clinics');
     } catch (error) {
       console.error('Error deleting clinic:', error);
-      alert('Failed to delete clinic');
+      toast.error('Failed to delete clinic');
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const formatAddress = () => {
-    if (!clinic) return '';
-    const parts = [
-      clinic.street,
-      clinic.city,
-      clinic.state,
-      clinic.postcode,
-    ].filter(Boolean);
-    return parts.join(', ');
-  };
-
-  const getTodayHours = () => {
-    if (!clinic?.hours) return 'Hours not available';
-    const days = [
-      'sunday',
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-    ];
-    const today = days[new Date().getDay()];
-    return clinic.hours[today as keyof typeof clinic.hours] || 'Closed';
-  };
-
-  if (loading) {
+  // ✅ PERMISSION CHECK
+  if (!canViewClinics(user)) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
-        <LoadingSpinner size='lg' text='Loading clinic details...' />
+        <div className='text-center'>
+          <h2 className='text-xl font-semibold text-gray-900 mb-2'>
+            Access Denied
+          </h2>
+          <p className='text-gray-600'>
+            You do not have permission to view clinic details.
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (error || !clinic) {
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <LoadingSpinner size='lg' />
+      </div>
+    );
+  }
+
+  if (!clinic) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
         <div className='text-center'>
-          <AlertCircle className='h-12 w-12 text-red-500 mx-auto mb-4' />
-          <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-            Error Loading Clinic
-          </h3>
-          <p className='text-gray-600 mb-4'>{error || 'Clinic not found'}</p>
+          <h2 className='text-xl font-semibold text-gray-900 mb-2'>
+            Clinic Not Found
+          </h2>
+          <p className='text-gray-600 mb-4'>
+            The clinic you&apos;re looking for doesn&apos;t exist or has been
+            removed.
+          </p>
           <Button asChild>
             <Link href='/admin/clinics'>Back to Clinics</Link>
           </Button>
@@ -139,10 +154,13 @@ export default function ViewClinicPage() {
     );
   }
 
+  // ✅ GET ENHANCED STATUS INFO
+  const statusInfo = getClinicStatus(clinic);
+
   return (
-    <div className='space-y-6 max-w-6xl mx-auto'>
+    <div className='space-y-6'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row justify-between items-start gap-4'>
+      <div className='flex items-center justify-between'>
         <div className='flex items-center gap-4'>
           <Button variant='outline' asChild>
             <Link href='/admin/clinics'>
@@ -152,41 +170,83 @@ export default function ViewClinicPage() {
           </Button>
           <div>
             <h1 className='text-3xl font-bold text-gray-900'>{clinic.name}</h1>
-            <p className='text-gray-600'>{formatAddress()}</p>
+            {/* ✅ USING CENTRALIZED ADDRESS FORMATTING */}
+            <p className='text-gray-600'>{formatAddress(clinic)}</p>
           </div>
         </div>
 
         <div className='flex gap-2'>
-          <PrimaryButton asChild>
-            <Link href={`/admin/clinics/${clinic.id}/edit`}>
-              <Edit className='h-4 w-4 mr-2' />
-              Edit Clinic
-            </Link>
-          </PrimaryButton>
-          <Button variant='destructive' onClick={handleDelete}>
-            <Trash2 className='h-4 w-4 mr-2' />
-            Delete
-          </Button>
+          {/* ✅ PERMISSION-BASED EDIT BUTTON */}
+          {canManageClinics(user) && (
+            <PrimaryButton asChild>
+              <Link href={`/admin/clinics/${clinic.id}/edit`}>
+                <Edit className='h-4 w-4 mr-2' />
+                Edit Clinic
+              </Link>
+            </PrimaryButton>
+          )}
+
+          {/* ✅ PERMISSION-BASED DELETE BUTTON */}
+          {canDeleteClinics(user) && (
+            <Button
+              variant='destructive'
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 className='h-4 w-4 mr-2' />
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Emergency Badge */}
-      {clinic.emergency && (
-        <div className='bg-red-50 border border-red-200 rounded-lg p-4'>
-          <div className='flex items-center gap-2'>
-            <AlertCircle className='h-5 w-5 text-red-600' />
-            <span className='font-semibold text-red-800'>
-              Emergency Services Available
-            </span>
-          </div>
-          {clinic.emergency_hours && (
-            <p className='text-red-700 mt-1'>Hours: {clinic.emergency_hours}</p>
-          )}
-          {clinic.emergency_details && (
-            <p className='text-red-700 mt-1'>{clinic.emergency_details}</p>
-          )}
+      {/* ✅ ENHANCED STATUS BANNER */}
+      <div
+        className={`p-4 rounded-lg border ${
+          statusInfo.status === 'open'
+            ? 'bg-green-50 border-green-200'
+            : statusInfo.status === 'emergency'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-gray-50 border-gray-200'
+        }`}
+      >
+        <div className='flex items-center gap-2'>
+          <AlertCircle
+            className={`h-5 w-5 ${
+              statusInfo.status === 'open'
+                ? 'text-green-600'
+                : statusInfo.status === 'emergency'
+                ? 'text-red-600'
+                : 'text-gray-600'
+            }`}
+          />
+          <span
+            className={`font-semibold ${
+              statusInfo.status === 'open'
+                ? 'text-green-800'
+                : statusInfo.status === 'emergency'
+                ? 'text-red-800'
+                : 'text-gray-800'
+            }`}
+          >
+            {statusInfo.message}
+          </span>
         </div>
-      )}
+        {clinic.emergency && (
+          <div className='mt-2'>
+            {clinic.emergency_hours && (
+              <p className='text-red-700 text-sm'>
+                Emergency Hours: {clinic.emergency_hours}
+              </p>
+            )}
+            {clinic.emergency_details && (
+              <p className='text-red-700 text-sm mt-1'>
+                {clinic.emergency_details}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
         {/* Main Information */}
@@ -206,7 +266,16 @@ export default function ViewClinicPage() {
                     <label className='text-sm font-medium text-gray-500'>
                       Phone
                     </label>
-                    <p className='text-gray-900'>{clinic.phone}</p>
+                    {/* ✅ USING CENTRALIZED PHONE FORMATTING */}
+                    <p className='text-gray-900'>{formatPhone(clinic.phone)}</p>
+                    <a
+                      href={`tel:${formatPhone(clinic.phone, {
+                        format: 'tel',
+                      })}`}
+                      className='text-emerald-600 hover:text-emerald-700 text-sm'
+                    >
+                      Call now
+                    </a>
                   </div>
                 )}
 
@@ -216,6 +285,29 @@ export default function ViewClinicPage() {
                       Email
                     </label>
                     <p className='text-gray-900'>{clinic.email}</p>
+                    <a
+                      href={`mailto:${clinic.email}`}
+                      className='text-emerald-600 hover:text-emerald-700 text-sm'
+                    >
+                      Send email
+                    </a>
+                  </div>
+                )}
+
+                {clinic.website && (
+                  <div>
+                    <label className='text-sm font-medium text-gray-500'>
+                      Website
+                    </label>
+                    <p className='text-gray-900'>{clinic.website}</p>
+                    <a
+                      href={clinic.website}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-emerald-600 hover:text-emerald-700 text-sm flex items-center gap-1'
+                    >
+                      Visit website <ExternalLink size={12} />
+                    </a>
                   </div>
                 )}
 
@@ -223,59 +315,20 @@ export default function ViewClinicPage() {
                   <label className='text-sm font-medium text-gray-500'>
                     Address
                   </label>
-                  <p className='text-gray-900'>{formatAddress()}</p>
+                  {/* ✅ USING CENTRALIZED ADDRESS FORMATTING */}
+                  <p className='text-gray-900'>{formatAddress(clinic)}</p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      formatAddressForMaps(clinic) // ✅ CENTRALIZED MAPS FORMATTING
+                    )}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-emerald-600 hover:text-emerald-700 text-sm flex items-center gap-1'
+                  >
+                    View on maps <ExternalLink size={12} />
+                  </a>
                 </div>
-
-                {clinic.website && (
-                  <div>
-                    <label className='text-sm font-medium text-gray-500'>
-                      Website
-                    </label>
-                    <a
-                      href={clinic.website}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='text-emerald-600 hover:text-emerald-700 flex items-center gap-1'
-                    >
-                      <Globe className='h-4 w-4' />
-                      Visit Website
-                    </a>
-                  </div>
-                )}
               </div>
-
-              {/* Social Media */}
-              {(clinic.facebook_url || clinic.instagram_url) && (
-                <div className='pt-4 border-t'>
-                  <label className='text-sm font-medium text-gray-500 block mb-2'>
-                    Social Media
-                  </label>
-                  <div className='flex gap-3'>
-                    {clinic.facebook_url && (
-                      <a
-                        href={clinic.facebook_url}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-blue-600 hover:text-blue-700 flex items-center gap-1'
-                      >
-                        <Facebook className='h-4 w-4' />
-                        Facebook
-                      </a>
-                    )}
-                    {clinic.instagram_url && (
-                      <a
-                        href={clinic.instagram_url}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-pink-600 hover:text-pink-700 flex items-center gap-1'
-                      >
-                        <Instagram className='h-4 w-4' />
-                        Instagram
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -288,187 +341,265 @@ export default function ViewClinicPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className='space-y-2'>
-                <div className='flex justify-between items-center p-2 bg-emerald-50 rounded'>
-                  <span className='font-medium text-emerald-800'>Today</span>
-                  <span className='text-emerald-700'>{getTodayHours()}</span>
-                </div>
-
-                {clinic.hours &&
-                  Object.entries(clinic.hours).map(([day, hours]) => (
+              {clinic.hours ? (
+                <div className='space-y-2'>
+                  {Object.entries(clinic.hours).map(([day, hours]) => (
                     <div
                       key={day}
                       className='flex justify-between items-center py-1'
                     >
-                      <span className='capitalize text-gray-700'>{day}</span>
+                      <span className='text-gray-700 capitalize font-medium'>
+                        {day}
+                      </span>
                       <span className='text-gray-900'>{hours}</span>
                     </div>
                   ))}
-              </div>
+                  <div className='pt-3 border-t'>
+                    <p className='text-sm text-gray-600'>
+                      {/* ✅ USING CENTRALIZED HOURS FORMATTING */}
+                      Today:{' '}
+                      <span className='font-medium'>
+                        {getTodayHours(clinic.hours)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-gray-500'>No operating hours specified</p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Services and Specializations */}
+          {/* Services & Specializations */}
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Stethoscope className='h-5 w-5' />
-                Services & Specializations
-              </CardTitle>
+              <CardTitle>Services & Specializations</CardTitle>
             </CardHeader>
-            <CardContent className='space-y-6'>
-              {/* Animals Treated */}
-              {clinic.animals_treated && clinic.animals_treated.length > 0 && (
+            <CardContent className='space-y-4'>
+              {clinic.animals_treated && clinic.animals_treated.length > 0 ? (
                 <div>
-                  <label className='text-sm font-medium text-gray-500 block mb-2'>
+                  <h4 className='font-medium text-gray-900 mb-2'>
                     Animals Treated
-                  </label>
+                  </h4>
                   <div className='flex flex-wrap gap-2'>
-                    {clinic.animals_treated.map((animal, index) => (
-                      <Badge
-                        key={index}
-                        variant='secondary'
-                        className='flex items-center gap-1'
-                      >
-                        <PawPrint className='h-3 w-3' />
+                    {clinic.animals_treated.map((animal) => (
+                      <Badge key={animal} variant='secondary'>
                         {animal}
                       </Badge>
                     ))}
                   </div>
                 </div>
+              ) : (
+                <div>
+                  <h4 className='font-medium text-gray-900 mb-2'>
+                    Animals Treated
+                  </h4>
+                  <p className='text-gray-500 text-sm'>Not specified</p>
+                </div>
               )}
 
-              {/* Specializations */}
-              {clinic.specializations && clinic.specializations.length > 0 && (
+              {clinic.specializations && clinic.specializations.length > 0 ? (
                 <div>
-                  <label className='text-sm font-medium text-gray-500 block mb-2'>
+                  <h4 className='font-medium text-gray-900 mb-2'>
                     Specializations
-                  </label>
+                  </h4>
                   <div className='flex flex-wrap gap-2'>
-                    {clinic.specializations.map((spec, index) => (
+                    {clinic.specializations.map((spec) => (
                       <Badge
-                        key={index}
+                        key={spec}
                         variant='outline'
-                        className='border-emerald-200 text-emerald-700'
+                        className='bg-emerald-50 text-emerald-700'
                       >
                         {spec}
                       </Badge>
                     ))}
                   </div>
                 </div>
+              ) : (
+                <div>
+                  <h4 className='font-medium text-gray-900 mb-2'>
+                    Specializations
+                  </h4>
+                  <p className='text-gray-500 text-sm'>Not specified</p>
+                </div>
               )}
 
-              {/* Services Offered */}
-              {clinic.services_offered &&
-                clinic.services_offered.length > 0 && (
-                  <div>
-                    <label className='text-sm font-medium text-gray-500 block mb-2'>
-                      Services Offered
-                    </label>
-                    <div className='flex flex-wrap gap-2'>
-                      {clinic.services_offered.map((service, index) => (
-                        <Badge
-                          key={index}
-                          className='bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        >
-                          {service}
-                        </Badge>
-                      ))}
-                    </div>
+              {clinic.services_offered && clinic.services_offered.length > 0 ? (
+                <div>
+                  <h4 className='font-medium text-gray-900 mb-2'>
+                    Services Offered
+                  </h4>
+                  <div className='flex flex-wrap gap-2'>
+                    {clinic.services_offered.map((service) => (
+                      <Badge key={service} variant='outline'>
+                        {service}
+                      </Badge>
+                    ))}
                   </div>
-                )}
-
-              {/* No services message */}
-              {!clinic.animals_treated?.length &&
-                !clinic.specializations?.length &&
-                !clinic.services_offered?.length && (
-                  <p className='text-gray-500 italic'>
-                    No services or specializations specified
-                  </p>
-                )}
+                </div>
+              ) : (
+                <div>
+                  <h4 className='font-medium text-gray-900 mb-2'>
+                    Services Offered
+                  </h4>
+                  <p className='text-gray-500 text-sm'>Not specified</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Sidebar */}
         <div className='space-y-6'>
-          {/* Quick Actions */}
+          {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Settings className='h-5 w-5' />
-                Quick Actions
-              </CardTitle>
+              <CardTitle>Quick Stats</CardTitle>
             </CardHeader>
             <CardContent className='space-y-3'>
-              <Button variant='outline' fullWidth asChild>
-                <Link href={`/admin/clinics/${clinic.id}/edit`}>
-                  <Edit className='h-4 w-4 mr-2' />
-                  Edit Details
-                </Link>
-              </Button>
-
-              <Button variant='outline' fullWidth asChild>
-                <Link href={`/clinic/${clinic.id}`} target='_blank'>
-                  <Globe className='h-4 w-4 mr-2' />
-                  View Public Page
-                </Link>
-              </Button>
-
-              <Button variant='destructive' fullWidth onClick={handleDelete}>
-                <Trash2 className='h-4 w-4 mr-2' />
-                Delete Clinic
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Clinic Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Calendar className='h-5 w-5' />
-                Clinic Info
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-3'>
-              <div className='flex justify-between'>
-                <span className='text-gray-500'>Status</span>
-                <Badge variant={clinic.emergency ? 'destructive' : 'secondary'}>
-                  {clinic.emergency ? 'Emergency Available' : 'Regular Hours'}
+              <div className='flex justify-between text-sm'>
+                <span className='text-gray-600'>Status</span>
+                <Badge
+                  variant={
+                    statusInfo.status === 'open' ? 'default' : 'secondary'
+                  }
+                  className={
+                    statusInfo.status === 'open'
+                      ? 'bg-green-100 text-green-800'
+                      : statusInfo.status === 'emergency'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }
+                >
+                  {statusInfo.status === 'open'
+                    ? 'Open'
+                    : statusInfo.status === 'emergency'
+                    ? 'Emergency'
+                    : 'Closed'}
                 </Badge>
               </div>
 
-              <div className='flex justify-between'>
-                <span className='text-gray-500'>Animals</span>
+              <div className='flex justify-between text-sm'>
+                <span className='text-gray-600'>Emergency Services</span>
+                <Badge variant={clinic.emergency ? 'destructive' : 'secondary'}>
+                  {clinic.emergency ? 'Available' : 'Not Available'}
+                </Badge>
+              </div>
+
+              <div className='flex justify-between text-sm'>
+                <span className='text-gray-600'>Animals Treated</span>
                 <span className='text-gray-900'>
                   {clinic.animals_treated?.length || 0} types
                 </span>
               </div>
 
-              <div className='flex justify-between'>
-                <span className='text-gray-500'>Services</span>
+              <div className='flex justify-between text-sm'>
+                <span className='text-gray-600'>Specializations</span>
+                <span className='text-gray-900'>
+                  {clinic.specializations?.length || 0} specialties
+                </span>
+              </div>
+
+              <div className='flex justify-between text-sm'>
+                <span className='text-gray-600'>Services</span>
                 <span className='text-gray-900'>
                   {clinic.services_offered?.length || 0} services
                 </span>
               </div>
-
-              <div className='flex justify-between'>
-                <span className='text-gray-500'>Specializations</span>
-                <span className='text-gray-900'>
-                  {clinic.specializations?.length || 0} areas
-                </span>
-              </div>
-
-              {clinic.created_at && (
-                <div className='flex justify-between'>
-                  <span className='text-gray-500'>Added</span>
-                  <span className='text-gray-900'>
-                    {new Date(clinic.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
             </CardContent>
           </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+              {clinic.phone && (
+                <Button variant='outline' className='w-full' asChild>
+                  <a
+                    href={`tel:${formatPhone(clinic.phone, { format: 'tel' })}`}
+                  >
+                    <Phone size={16} className='mr-2' />
+                    Call Clinic
+                  </a>
+                </Button>
+              )}
+
+              {clinic.email && (
+                <Button variant='outline' className='w-full' asChild>
+                  <a href={`mailto:${clinic.email}`}>
+                    <Mail size={16} className='mr-2' />
+                    Send Email
+                  </a>
+                </Button>
+              )}
+
+              {clinic.website && (
+                <Button variant='outline' className='w-full' asChild>
+                  <a
+                    href={clinic.website}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    <Globe size={16} className='mr-2' />
+                    Visit Website
+                  </a>
+                </Button>
+              )}
+
+              <Button variant='outline' className='w-full' asChild>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    formatAddressForMaps(clinic)
+                  )}`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  <MapPin size={16} className='mr-2' />
+                  View on Maps
+                </a>
+              </Button>
+
+              <Button variant='outline' className='w-full' asChild>
+                <Link href={`/clinic/${clinic.id}`}>
+                  <ExternalLink size={16} className='mr-2' />
+                  View Public Page
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Admin Actions */}
+          {(canManageClinics(user) || canDeleteClinics(user)) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Actions</CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-3'>
+                {canManageClinics(user) && (
+                  <Button className='w-full' asChild>
+                    <Link href={`/admin/clinics/${clinic.id}/edit`}>
+                      <Edit size={16} className='mr-2' />
+                      Edit Clinic
+                    </Link>
+                  </Button>
+                )}
+
+                {canDeleteClinics(user) && (
+                  <Button
+                    variant='destructive'
+                    className='w-full'
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    <Trash2 size={16} className='mr-2' />
+                    {deleting ? 'Deleting...' : 'Delete Clinic'}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

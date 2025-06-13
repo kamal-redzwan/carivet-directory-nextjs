@@ -16,6 +16,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ClinicMap from '@/components/ClinicMap';
 
+// ✅ IMPORT CENTRALIZED UTILITIES (replacing duplicate functions)
+import {
+  formatAddress,
+  formatAddressForMaps,
+  getTodayHours,
+  getClinicStatus,
+} from '@/utils/formatters';
+
 export default function ClinicDetailPage() {
   const params = useParams();
 
@@ -46,32 +54,8 @@ export default function ClinicDetailPage() {
     { enabled: !!params?.id, refetchOnMount: true }
   );
 
-  // Helper functions
-  const formatAddress = () => {
-    if (!clinic) return 'Address not available';
-    const parts = [
-      clinic.street,
-      clinic.city,
-      clinic.state,
-      clinic.postcode,
-    ].filter((part) => part && part.trim());
-    return parts.length > 0 ? parts.join(', ') : 'Address not available';
-  };
-
-  const getTodayHours = () => {
-    if (!clinic?.hours) return 'Hours not available';
-    const days = [
-      'sunday',
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-    ];
-    const today = days[new Date().getDay()];
-    return clinic.hours[today as keyof typeof clinic.hours] || 'Closed';
-  };
+  // ✅ REMOVED DUPLICATE HELPER FUNCTIONS (formatAddress, getTodayHours)
+  // ✅ NOW USING CENTRALIZED UTILITIES
 
   return (
     <HeroPageLayout
@@ -154,107 +138,111 @@ export default function ClinicDetailPage() {
               </div>
 
               {/* Sidebar */}
-              <div className='lg:col-span-1 space-y-8'>
-                {/* Emergency Services */}
-                {clinic.emergency && (
-                  <Card className='border-red-200'>
-                    <CardHeader>
-                      <CardTitle className='flex items-center gap-2 text-red-800'>
-                        <StatusBadge status='emergency' />
-                        Emergency Services
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {clinic.emergency_details && (
-                        <p className='text-sm text-red-700 mb-2'>
-                          {clinic.emergency_details}
-                        </p>
-                      )}
-                      {clinic.emergency_hours && (
-                        <p className='text-sm text-red-700'>
-                          <strong>Hours:</strong> {clinic.emergency_hours}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
+              <div className='space-y-6'>
+                {/* ✅ ENHANCED STATUS CARD WITH CENTRALIZED LOGIC */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const statusInfo = getClinicStatus(clinic);
+                      return (
+                        <div className='text-center'>
+                          <Badge
+                            variant={
+                              statusInfo.status === 'open'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                            className={`text-sm px-4 py-2 ${
+                              statusInfo.status === 'open'
+                                ? 'bg-green-100 text-green-800'
+                                : statusInfo.status === 'emergency'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {statusInfo.message}
+                          </Badge>
+                          <p className='text-sm text-gray-600 mt-2'>
+                            Today: {getTodayHours(clinic.hours)}
+                          </p>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
 
                 {/* Services & Specializations */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Services & Specializations</CardTitle>
                   </CardHeader>
-                  <CardContent className='space-y-6'>
-                    {/* Animals Treated */}
+                  <CardContent className='space-y-4'>
                     {clinic.animals_treated &&
-                      clinic.animals_treated.length > 0 && (
-                        <div>
-                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
-                            Animals Treated
-                          </h4>
-                          <div className='flex flex-wrap gap-2'>
-                            {clinic.animals_treated.map((animal, index) => (
-                              <Badge
-                                key={index}
-                                variant='secondary'
-                                className='text-xs'
-                              >
-                                {animal}
-                              </Badge>
-                            ))}
-                          </div>
+                    clinic.animals_treated.length > 0 ? (
+                      <div>
+                        <h4 className='font-medium text-gray-900 mb-2'>
+                          Animals Treated
+                        </h4>
+                        <div className='flex flex-wrap gap-1'>
+                          {clinic.animals_treated.map((animal) => (
+                            <Badge key={animal} variant='secondary'>
+                              {animal}
+                            </Badge>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    ) : (
+                      <p className='text-gray-500 text-sm'>
+                        No animal treatment information specified
+                      </p>
+                    )}
 
-                    {/* Specializations */}
                     {clinic.specializations &&
-                      clinic.specializations.length > 0 && (
-                        <div>
-                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
-                            Specializations
-                          </h4>
-                          <div className='flex flex-wrap gap-2'>
-                            {clinic.specializations.map((spec, index) => (
-                              <Badge
-                                key={index}
-                                variant='outline'
-                                className='text-xs border-emerald-200 text-emerald-700'
-                              >
-                                {spec}
-                              </Badge>
-                            ))}
-                          </div>
+                    clinic.specializations.length > 0 ? (
+                      <div>
+                        <h4 className='font-medium text-gray-900 mb-2'>
+                          Specializations
+                        </h4>
+                        <div className='flex flex-wrap gap-1'>
+                          {clinic.specializations.map((spec) => (
+                            <Badge
+                              key={spec}
+                              variant='outline'
+                              className='bg-emerald-50 text-emerald-700'
+                            >
+                              {spec}
+                            </Badge>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    ) : (
+                      <p className='text-gray-500 text-sm'>
+                        No specialization information specified
+                      </p>
+                    )}
 
-                    {/* Services Offered */}
                     {clinic.services_offered &&
-                      clinic.services_offered.length > 0 && (
-                        <div>
-                          <h4 className='text-sm font-medium text-gray-700 mb-2'>
-                            Services Offered
-                          </h4>
-                          <div className='flex flex-wrap gap-2'>
-                            {clinic.services_offered.map((service, index) => (
-                              <Badge
-                                key={index}
-                                className='text-xs bg-blue-100 text-blue-800 hover:bg-blue-200'
-                              >
-                                {service}
-                              </Badge>
-                            ))}
-                          </div>
+                    clinic.services_offered.length > 0 ? (
+                      <div>
+                        <h4 className='font-medium text-gray-900 mb-2'>
+                          Services Offered
+                        </h4>
+                        <div className='flex flex-wrap gap-1'>
+                          {clinic.services_offered.map((service) => (
+                            <Badge key={service} variant='outline'>
+                              {service}
+                            </Badge>
+                          ))}
                         </div>
-                      )}
-
-                    {/* No services message */}
-                    {!clinic.animals_treated?.length &&
-                      !clinic.specializations?.length &&
-                      !clinic.services_offered?.length && (
-                        <p className='text-gray-500 italic text-sm'>
-                          No services or specializations specified
-                        </p>
-                      )}
+                      </div>
+                    ) : (
+                      <p className='text-gray-500 text-sm'>
+                        No services or specializations specified
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -287,7 +275,7 @@ export default function ClinicDetailPage() {
                     <Button variant='outline' fullWidth asChild>
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          formatAddress()
+                          formatAddressForMaps(clinic) // ✅ USING CENTRALIZED MAPS FORMATTING
                         )}`}
                         target='_blank'
                         rel='noopener noreferrer'
@@ -298,7 +286,7 @@ export default function ClinicDetailPage() {
                   </CardContent>
                 </Card>
 
-                {/* Clinic Stats */}
+                {/* ✅ ENHANCED CLINIC INFO WITH CENTRALIZED STATUS */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Clinic Information</CardTitle>
@@ -307,39 +295,39 @@ export default function ClinicDetailPage() {
                     <div className='flex justify-between text-sm'>
                       <span className='text-gray-600'>Status</span>
                       <StatusBadge
-                        status={clinic.emergency ? 'emergency' : 'regular'}
-                        size='sm'
+                        status={clinic.emergency ? 'emergency' : 'active'}
+                        showIcon={false}
                       />
                     </div>
 
                     <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Animals</span>
-                      <span className='text-gray-900'>
-                        {clinic.animals_treated?.length || 0} types
+                      <span className='text-gray-600'>Location</span>
+                      <span className='text-right text-gray-900'>
+                        {/* ✅ USING CENTRALIZED ADDRESS FORMATTING */}
+                        {formatAddress(clinic, { includePostcode: false })}
                       </span>
                     </div>
 
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Services</span>
-                      <span className='text-gray-900'>
-                        {clinic.services_offered?.length || 0} services
-                      </span>
-                    </div>
+                    {clinic.emergency && (
+                      <>
+                        <div className='flex justify-between text-sm'>
+                          <span className='text-gray-600'>Emergency Hours</span>
+                          <span className='text-right text-gray-900'>
+                            {clinic.emergency_hours || '24/7'}
+                          </span>
+                        </div>
 
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Specializations</span>
-                      <span className='text-gray-900'>
-                        {clinic.specializations?.length || 0} areas
-                      </span>
-                    </div>
-
-                    {clinic.created_at && (
-                      <div className='flex justify-between text-sm'>
-                        <span className='text-gray-600'>Added</span>
-                        <span className='text-gray-900'>
-                          {new Date(clinic.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
+                        {clinic.emergency_details && (
+                          <div className='pt-2 border-t'>
+                            <p className='text-sm text-gray-600 mb-1'>
+                              Emergency Details:
+                            </p>
+                            <p className='text-sm text-gray-900'>
+                              {clinic.emergency_details}
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
