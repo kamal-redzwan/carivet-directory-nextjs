@@ -48,7 +48,7 @@ export default function ContactUsPage() {
   const form = useForm({
     initialValues,
     validationSchema: contactFormSchema,
-    onSubmit: async (values) => {
+    onSubmit: async (_values) => {
       // In production, send to API endpoint
       // For now, simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));

@@ -1,15 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Bell,
-  Clock,
-  Shield,
-  MapPin,
-  X,
-  Check,
-  AlertTriangle,
-} from 'lucide-react';
+import { Bell, Clock, Shield, MapPin, X, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,7 +61,7 @@ export function SmartNotificationSystem({
     const newNotifications: Notification[] = [];
 
     clinics.forEach((clinic) => {
-      const currentStatus = getClinicStatus(clinic, now);
+      const _currentStatus = getClinicStatus(clinic, now);
       const isOpen = isCurrentlyOpen(clinic.hours, now);
       const isFavorite = favoriteClinicIds.includes(clinic.id);
       const isInUserArea = userLocation
