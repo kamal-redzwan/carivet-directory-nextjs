@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Clinic } from '@/types/clinic';
@@ -49,6 +49,9 @@ import {
   canDeleteClinics,
 } from '@/utils/permissions';
 import { isCurrentlyOpen } from '@/utils/formatters';
+
+// Import useSupabaseQuery
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 
 // ============================================================================
 // MAIN COMPONENT
@@ -99,12 +102,18 @@ export default function EnhancedAdminClinicsPage() {
       setLoading(true);
       setError(null);
 
+      console.log('Loading clinics...');
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading clinics:', error);
+        throw error;
+      }
+
+      console.log('Clinics loaded:', data?.length);
       setClinics(data || []);
     } catch (error) {
       console.error('Error loading clinics:', error);
@@ -118,9 +127,25 @@ export default function EnhancedAdminClinicsPage() {
   };
 
   useEffect(() => {
-    if (canViewClinics(user)) {
-      loadClinics();
-    }
+    const initialize = async () => {
+      try {
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        if (canViewClinics(user)) {
+          await loadClinics();
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing clinics page:', error);
+        setError('Failed to initialize clinics page');
+        setLoading(false);
+      }
+    };
+    initialize();
   }, [user]);
 
   // ============================================================================
@@ -332,7 +357,7 @@ export default function EnhancedAdminClinicsPage() {
   // PERMISSION CHECK
   // ============================================================================
 
-  if (!canViewClinics(user)) {
+  if (!user || !canViewClinics(user)) {
     return (
       <div className='flex items-center justify-center min-h-[400px]'>
         <div className='text-center'>

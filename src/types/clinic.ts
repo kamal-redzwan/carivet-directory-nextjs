@@ -39,3 +39,32 @@ export interface SearchFilters {
   specializations: string[];
   services: string[];
 }
+
+export interface NewClinicFormData extends Record<string, unknown> {
+  name: string;
+  street?: string;
+  city: string;
+  state: string;
+  postcode?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  description?: string;
+  emergency: boolean;
+  emergency_hours?: string;
+  emergency_details?: string;
+  hours: {
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+  };
+  animals_treated: string[];
+  specializations: string[];
+  services_offered: string[];
+  facebook_url?: string;
+  instagram_url?: string;
+}

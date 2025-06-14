@@ -1,7 +1,6 @@
-// Fixed Dashboard - Replace your dashboard page with this
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/data/StatsCard';
@@ -15,11 +14,13 @@ import {
   Eye,
   Plus,
   AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { supabase } from '@/lib/supabase';
 import { Clinic } from '@/types/clinic';
 import Link from 'next/link';
+import { LoadingSpinner } from '@/components/ui/loading';
 
 interface DashboardStats {
   totalClinics: number;
@@ -28,22 +29,30 @@ interface DashboardStats {
   recentActivity: number;
 }
 
-export default function AdminDashboardPage() {
+export default function AdminDashboard() {
   const { user } = useAuth();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // ✅ MEMOIZE THE QUERY FUNCTION - This prevents re-renders
   const statsQueryFn = useCallback(async () => {
     try {
-      console.log('Loading dashboard stats...');
-
       // Get total clinics - simplified query
       const { data: clinicsData, error: clinicsError } = await supabase
         .from('clinics')
         .select('id, verification_status');
 
       if (clinicsError) {
-        console.error('Clinics query error:', clinicsError);
-        throw new Error(`Clinics query failed: ${clinicsError.message}`);
+        if (clinicsError.message.includes('NetworkError')) {
+          return {
+            data: null,
+            error:
+              'Network connection error. Please check your internet connection.',
+          };
+        }
+        return {
+          data: null,
+          error: `Clinics query failed: ${clinicsError.message}`,
+        };
       }
 
       const totalClinics = clinicsData?.length || 0;
@@ -61,10 +70,14 @@ export default function AdminDashboardPage() {
           .eq('is_active', true);
 
         if (adminError) {
-          console.warn(
-            'Admin users query failed (table might not exist):',
-            adminError
-          );
+          if (adminError.message.includes('NetworkError')) {
+            console.warn('Network error while fetching admin users');
+          } else {
+            console.warn(
+              'Admin users query failed (table might not exist):',
+              adminError
+            );
+          }
         } else {
           totalAdminUsers = adminData?.length || 1;
         }
@@ -79,28 +92,51 @@ export default function AdminDashboardPage() {
         recentActivity: 0,
       };
 
-      console.log('Dashboard stats loaded:', result);
-
       return {
         data: result,
         error: null,
       };
     } catch (error) {
       console.error('Dashboard stats error:', error);
-      throw error;
+      return {
+        data: null,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
+      };
     }
   }, []); // Empty dependencies - query function never changes
 
   // ✅ MEMOIZE THE CLINICS QUERY FUNCTION
   const clinicsQueryFn = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('clinics')
-      .select('*')
-      .order('name');
+    try {
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('*')
+        .order('name');
 
-    if (error) throw error;
+      if (error) {
+        if (error.message.includes('NetworkError')) {
+          return {
+            data: null,
+            error:
+              'Network connection error. Please check your internet connection.',
+          };
+        }
+        return {
+          data: null,
+          error: error.message,
+        };
+      }
 
-    return { data: data || [], error: null };
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Clinics query error:', error);
+      return {
+        data: null,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
+      };
+    }
   }, []);
 
   // ✅ USE THE MEMOIZED FUNCTIONS
@@ -124,30 +160,47 @@ export default function AdminDashboardPage() {
     refetchOnMount: true,
   });
 
+  // Initialize data
+  useEffect(() => {
+    const initializeData = async () => {
+      if (user) {
+        try {
+          await Promise.all([refetchStats(), refetchClinics()]);
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Error initializing dashboard data:', error);
+        }
+      }
+    };
+
+    initializeData();
+  }, [user, refetchStats, refetchClinics]);
+
   // Show loading state
-  if (!user) {
+  if (!user || !isInitialized || statsLoading || clinicsLoading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Loading...</p>
-        </div>
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <LoadingSpinner size='lg' text='Loading dashboard...' />
       </div>
     );
   }
 
   // Show error state
-  if (statsError) {
+  if (statsError || clinicsError) {
     return (
-      <div className='space-y-6'>
-        <div className='text-center py-12'>
-          <div className='text-red-600 mb-4'>
-            <AlertCircle className='h-12 w-12 mx-auto mb-4' />
-            <h2 className='text-xl font-semibold mb-2'>Dashboard Error</h2>
-            <p className='text-sm'>Error loading dashboard: {statsError}</p>
-          </div>
-          <Button onClick={refetchStats}>Try Again</Button>
-        </div>
+      <div className='text-center py-12'>
+        <AlertTriangle className='h-12 w-12 text-red-500 mx-auto mb-4' />
+        <p className='text-red-600 mb-4'>
+          {statsError || clinicsError || 'Failed to load dashboard data'}
+        </p>
+        <Button
+          onClick={() => {
+            refetchStats();
+            refetchClinics();
+          }}
+        >
+          Try Again
+        </Button>
       </div>
     );
   }

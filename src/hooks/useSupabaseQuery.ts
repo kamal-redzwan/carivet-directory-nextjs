@@ -27,18 +27,23 @@ export function useSupabaseQuery<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // ✅ USE A REF TO PREVENT FUNCTION REFERENCE CHANGES
   const queryFnRef = useRef(queryFn);
   queryFnRef.current = queryFn;
 
-  const executeQuery = async (): Promise<void> => {
+  // ✅ MEMOIZE THE EXECUTE QUERY FUNCTION
+  const executeQuery = useCallback(async (): Promise<void> => {
+    if (!isInitialized) {
+      setIsInitialized(true);
+    }
+
     try {
       setLoading(true);
       setError(null);
-      setData(null);
 
-      const result = await queryFn();
+      const result = await queryFnRef.current();
 
       if (result.error) {
         throw result.error;
@@ -51,13 +56,14 @@ export function useSupabaseQuery<T>(
     } finally {
       setLoading(false);
     }
-  };
+  }, [isInitialized]); // Only depends on isInitialized
 
+  // ✅ INITIALIZE ON MOUNT
   useEffect(() => {
-    if (enabled && refetchOnMount) {
+    if (enabled && refetchOnMount && !isInitialized) {
       executeQuery();
     }
-  }, [executeQuery, enabled, refetchOnMount]);
+  }, [enabled, refetchOnMount, isInitialized, executeQuery]);
 
   return {
     data,

@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+const operatingHoursSchema = z.object({
+  monday: z.string(),
+  tuesday: z.string(),
+  wednesday: z.string(),
+  thursday: z.string(),
+  friday: z.string(),
+  saturday: z.string(),
+  sunday: z.string(),
+});
+
 export const clinicSchema = z.object({
   name: z.string().min(1, 'Clinic name is required'),
   street: z.string().optional(),
@@ -9,9 +19,14 @@ export const clinicSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   website: z.string().url('Invalid URL').optional().or(z.literal('')),
+  description: z.string().optional(),
   emergency: z.boolean(),
   emergency_hours: z.string().optional(),
   emergency_details: z.string().optional(),
+  hours: operatingHoursSchema,
+  animals_treated: z.array(z.string()),
+  specializations: z.array(z.string()),
+  services_offered: z.array(z.string()),
   facebook_url: z
     .string()
     .url('Invalid Facebook URL')

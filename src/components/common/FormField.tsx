@@ -1,26 +1,28 @@
-import { forwardRef } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+'use client';
+
+import { forwardRef, ChangeEvent } from 'react';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '../ui/select';
 import { cn } from '@/lib/utils';
 
 interface BaseFieldProps {
   label?: string;
-  error?: string;
+  error?: string | null;
   required?: boolean;
   className?: string;
   description?: string;
 }
 
 interface InputFieldProps extends BaseFieldProps {
-  type?: 'text' | 'email' | 'tel' | 'url' | 'password';
+  type?: string;
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
@@ -77,8 +79,10 @@ export const FormField = forwardRef<HTMLInputElement, InputFieldProps>(
           id={label}
           type={type}
           placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={value || ''}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            onChange(e.target.value)
+          }
           onBlur={onBlur}
           className={cn(error && 'border-red-500 focus:border-red-500')}
         />
@@ -92,39 +96,58 @@ export const FormField = forwardRef<HTMLInputElement, InputFieldProps>(
 FormField.displayName = 'FormField';
 
 // Textarea Field
-export function TextareaField({
-  label,
-  error,
-  required,
-  className,
-  description,
-  placeholder,
-  value,
-  onChange,
-  onBlur,
-  rows = 4,
-}: TextareaFieldProps) {
-  return (
-    <div className={cn('space-y-2', className)}>
-      {label && (
-        <Label htmlFor={label} className='text-sm font-medium text-gray-700'>
-          {label} {required && <span className='text-red-500'>*</span>}
-        </Label>
-      )}
-      <Textarea
-        id={label}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        rows={rows}
-        className={cn(error && 'border-red-500 focus:border-red-500')}
-      />
-      {description && <p className='text-xs text-gray-500'>{description}</p>}
-      {error && <p className='text-xs text-red-600'>{error}</p>}
-    </div>
-  );
-}
+export const TextareaField = forwardRef<
+  HTMLTextAreaElement,
+  TextareaFieldProps
+>(
+  (
+    {
+      label,
+      error,
+      required,
+      className,
+      description,
+      placeholder,
+      value,
+      onChange,
+      onBlur,
+      rows = 4,
+    },
+    ref
+  ) => {
+    return (
+      <div className={cn('space-y-2', className)}>
+        {label && (
+          <Label htmlFor={label} className='text-sm font-medium text-gray-700'>
+            {label} {required && <span className='text-red-500'>*</span>}
+          </Label>
+        )}
+        <textarea
+          ref={ref}
+          id={label}
+          placeholder={placeholder}
+          value={value || ''}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+            onChange(e.target.value)
+          }
+          onBlur={onBlur}
+          rows={rows}
+          className={cn(
+            'w-full px-3 py-2 border rounded-md transition-all duration-200',
+            'focus:ring-2 focus:ring-offset-0 focus:outline-none',
+            'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
+            error
+              ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+              : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20',
+            className
+          )}
+        />
+        {description && <p className='text-xs text-gray-500'>{description}</p>}
+        {error && <p className='text-xs text-red-600'>{error}</p>}
+      </div>
+    );
+  }
+);
 
 // Select Field
 export function SelectField({
