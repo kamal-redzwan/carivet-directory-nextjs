@@ -1,24 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
-import { Clinic } from '@/types/clinic';
-import {
-  Search,
-  Plus,
-  Building,
-  Shield,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Filter,
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { Clinic } from '@/types/clinic';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button, PrimaryButton } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { LoadingSpinner } from '@/components/ui/loading';
 import {
   Select,
   SelectContent,
@@ -26,81 +17,153 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LoadingSpinner } from '@/components/ui/loading';
+import {
+  Plus,
+  Search,
+  Grid,
+  List,
+  Eye,
+  Edit,
+  Trash2,
+  Archive,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Building,
+  AlertTriangle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-// ✅ IMPORT NEW ENHANCED COMPONENTS
-import { EnhancedClinicGrid } from '@/components/clinic/EnhancedClinicGrid';
-
-// ✅ IMPORT CENTRALIZED BUSINESS LOGIC
+// Import the delete operations hook and components
 import {
-  searchClinics,
-  sortClinics,
-  isCurrentlyOpen,
-  SearchFilters,
-} from '@/utils/businessLogic';
+  useDeleteOperations,
+  DeleteProgressIndicator,
+  BulkDeleteActions,
+  DeleteConfirmationDialog,
+} from '@/app/admin/clinics/deleteOperations';
 
-// ✅ IMPORT PERMISSION UTILITIES
-import { canManageClinics, canDeleteClinics } from '@/utils/permissions';
-import { useAuth } from '@/contexts/AuthContext';
+// Import existing utilities
+import {
+  canViewClinics,
+  canManageClinics,
+  canDeleteClinics,
+} from '@/utils/permissions';
+import { isCurrentlyOpen } from '@/utils/formatters';
 
-export default function AdminClinicsPage() {
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export default function EnhancedAdminClinicsPage() {
   const { user } = useAuth();
+
+  // State management
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedClinics, setSelectedClinics] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+
+  // Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stateFilter, setStateFilter] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [selectedClinics, setSelectedClinics] = useState<string[]>([]);
 
-  // ✅ LOAD CLINICS
+  // Delete confirmation state
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    type: 'single' | 'bulk' | 'soft';
+    clinicId?: string;
+    clinicName?: string;
+    operation?: () => Promise<void>;
+  }>({
+    isOpen: false,
+    type: 'single',
+  });
+
+  // Initialize delete operations hook
   const {
-    data: clinics,
-    loading,
-    error,
-    refetch: loadClinics,
-  } = useSupabaseQuery<Clinic[]>(
-    async () => {
+    isDeleting,
+    deleteProgress,
+    deleteSingleClinic,
+    deleteBulkClinics,
+    softDeleteClinic,
+  } = useDeleteOperations(user);
+
+  // ============================================================================
+  // DATA LOADING
+  // ============================================================================
+
+  const loadClinics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
         .order('name');
 
       if (error) throw error;
-      return { data: data || [], error: null };
-    },
-    [],
-    { enabled: true, refetchOnMount: true }
-  );
+      setClinics(data || []);
+    } catch (error) {
+      console.error('Error loading clinics:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to load clinics'
+      );
+      toast.error('Failed to load clinics');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // ✅ FILTER AND SEARCH LOGIC
+  useEffect(() => {
+    if (canViewClinics(user)) {
+      loadClinics();
+    }
+  }, [user]);
+
+  // ============================================================================
+  // FILTERING AND SEARCH
+  // ============================================================================
+
   const filteredClinics = useMemo(() => {
     if (!clinics) return [];
 
-    const filters: SearchFilters = {
-      query: searchTerm,
-      state: stateFilter !== 'all' ? stateFilter : undefined,
-    };
+    const filtered = clinics.filter((clinic) => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          clinic.name.toLowerCase().includes(searchLower) ||
+          clinic.city.toLowerCase().includes(searchLower) ||
+          clinic.state.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
 
-    let filtered = searchClinics(clinics, filters);
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((clinic) => {
+      // Status filter
+      if (statusFilter !== 'all') {
         const actualStatus = clinic.verification_status || 'verified';
-        return actualStatus === statusFilter;
-      });
-    }
+        if (actualStatus !== statusFilter) return false;
+      }
 
-    return sortClinics(filtered, 'name', 'asc');
+      // State filter
+      if (stateFilter !== 'all') {
+        if (clinic.state !== stateFilter) return false;
+      }
+
+      return true;
+    });
+
+    return filtered;
   }, [clinics, searchTerm, statusFilter, stateFilter]);
 
-  // ✅ GET UNIQUE STATES FOR FILTER
   const uniqueStates = useMemo(() => {
     if (!clinics) return [];
     return [...new Set(clinics.map((c) => c.state))].filter(Boolean).sort();
   }, [clinics]);
 
-  // ✅ REAL-TIME STATISTICS
+  // Statistics
   const stats = useMemo(() => {
     if (!clinics) return { total: 0, open: 0, emergency: 0, verified: 0 };
 
@@ -118,7 +181,10 @@ export default function AdminClinicsPage() {
     };
   }, [clinics]);
 
-  // ✅ HANDLE BULK SELECTION
+  // ============================================================================
+  // SELECTION HANDLERS
+  // ============================================================================
+
   const handleSelectClinic = (clinicId: string) => {
     setSelectedClinics((prev) =>
       prev.includes(clinicId)
@@ -135,34 +201,90 @@ export default function AdminClinicsPage() {
     }
   };
 
-  // ✅ HANDLE CLINIC DELETION
-  const handleDelete = async (clinicId: string, clinicName: string) => {
-    if (!canDeleteClinics(user)) {
-      toast.error('You do not have permission to delete clinics');
-      return;
-    }
+  const clearSelection = () => {
+    setSelectedClinics([]);
+  };
 
-    if (!confirm(`Delete "${clinicName}"? This cannot be undone.`)) {
-      return;
-    }
+  // ============================================================================
+  // DELETE HANDLERS
+  // ============================================================================
 
-    try {
-      const { error } = await supabase
-        .from('clinics')
-        .delete()
-        .eq('id', clinicId);
+  const handleSingleDelete = (clinicId: string, clinicName: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      type: 'single',
+      clinicId,
+      clinicName,
+      operation: async () => {
+        const result = await deleteSingleClinic(clinicId, clinicName);
+        if (result.success) {
+          await loadClinics();
+        }
+      },
+    });
+  };
 
-      if (error) throw error;
+  const handleBulkDelete = () => {
+    const selectedClinicData = clinics.filter((c) =>
+      selectedClinics.includes(c.id)
+    );
+    setDeleteConfirmation({
+      isOpen: true,
+      type: 'bulk',
+      operation: async () => {
+        const result = await deleteBulkClinics(
+          selectedClinics,
+          selectedClinicData
+        );
+        if (result.success) {
+          clearSelection();
+          await loadClinics();
+        }
+      },
+    });
+  };
 
-      toast.success(`${clinicName} deleted successfully`);
-      loadClinics(); // Refresh the list
-    } catch (error) {
-      console.error('Error deleting clinic:', error);
-      toast.error('Failed to delete clinic');
+  const handleBulkSoftDelete = () => {
+    setDeleteConfirmation({
+      isOpen: true,
+      type: 'soft',
+      operation: async () => {
+        // Process soft delete for each selected clinic
+        let successCount = 0;
+        for (const clinicId of selectedClinics) {
+          const clinic = clinics.find((c) => c.id === clinicId);
+          if (clinic) {
+            const result = await softDeleteClinic(clinicId, clinic.name);
+            if (result.success) {
+              successCount++;
+            }
+          }
+        }
+
+        if (successCount > 0) {
+          clearSelection();
+          await loadClinics();
+          toast.success(
+            `${successCount} clinic${
+              successCount > 1 ? 's' : ''
+            } archived successfully`
+          );
+        }
+      },
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirmation.operation) {
+      await deleteConfirmation.operation();
+      setDeleteConfirmation({ isOpen: false, type: 'single' });
     }
   };
 
-  // ✅ GET STATUS BADGE
+  // ============================================================================
+  // STATUS BADGE HELPER
+  // ============================================================================
+
   const getStatusBadge = (status: string | undefined) => {
     const actualStatus = status || 'verified';
 
@@ -197,10 +319,44 @@ export default function AdminClinicsPage() {
             Rejected
           </Badge>
         );
+      case 'archived':
+        return (
+          <Badge
+            variant='outline'
+            className='bg-gray-100 text-gray-800 border-gray-200'
+          >
+            <Archive size={12} className='mr-1' />
+            Archived
+          </Badge>
+        );
       default:
         return <Badge variant='outline'>Unknown</Badge>;
     }
   };
+
+  // ============================================================================
+  // PERMISSION CHECK
+  // ============================================================================
+
+  if (!canViewClinics(user)) {
+    return (
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <div className='text-center'>
+          <AlertTriangle className='h-12 w-12 text-red-500 mx-auto mb-4' />
+          <h2 className='text-xl font-semibold text-gray-900 mb-2'>
+            Access Denied
+          </h2>
+          <p className='text-gray-600'>
+            You do not have permission to view the clinic management page.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================================
+  // LOADING AND ERROR STATES
+  // ============================================================================
 
   if (loading) {
     return (
@@ -213,123 +369,126 @@ export default function AdminClinicsPage() {
   if (error) {
     return (
       <div className='text-center py-12'>
+        <AlertTriangle className='h-12 w-12 text-red-500 mx-auto mb-4' />
         <p className='text-red-600 mb-4'>Error loading clinics: {error}</p>
         <Button onClick={loadClinics}>Try Again</Button>
       </div>
     );
   }
 
+  // ============================================================================
+  // RENDER MAIN COMPONENT
+  // ============================================================================
+
   return (
     <div className='space-y-6'>
-      {/* ✅ ENHANCED HEADER */}
+      {/* Header */}
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold text-gray-900'>
             Clinic Management
           </h1>
           <p className='text-gray-600'>
-            Manage and monitor all veterinary clinics
+            Manage veterinary clinics and their information
           </p>
         </div>
         {canManageClinics(user) && (
-          <Button asChild>
+          <PrimaryButton asChild>
             <Link href='/admin/clinics/new'>
               <Plus className='h-4 w-4 mr-2' />
               Add New Clinic
             </Link>
-          </Button>
+          </PrimaryButton>
         )}
       </div>
 
-      {/* ✅ ENHANCED STATS CARDS */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      {/* Statistics Cards */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Clinics</CardTitle>
-            <Building className='h-4 w-4 text-muted-foreground' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>{stats.total}</div>
-            <p className='text-xs text-muted-foreground'>Registered clinics</p>
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <Building className='h-8 w-8 text-blue-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>
+                  Total Clinics
+                </p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  {stats.total}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Currently Open
-            </CardTitle>
-            <Clock className='h-4 w-4 text-green-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-green-600'>
-              {stats.open}
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <CheckCircle className='h-8 w-8 text-green-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>
+                  Currently Open
+                </p>
+                <p className='text-2xl font-bold text-gray-900'>{stats.open}</p>
+              </div>
             </div>
-            <p className='text-xs text-muted-foreground'>Open right now</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Emergency Services
-            </CardTitle>
-            <Shield className='h-4 w-4 text-red-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-red-600'>
-              {stats.emergency}
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <AlertTriangle className='h-8 w-8 text-red-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>Emergency</p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  {stats.emergency}
+                </p>
+              </div>
             </div>
-            <p className='text-xs text-muted-foreground'>24/7 services</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Verified</CardTitle>
-            <CheckCircle className='h-4 w-4 text-blue-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-blue-600'>
-              {stats.verified}
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <CheckCircle className='h-8 w-8 text-emerald-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>Verified</p>
+                <p className='text-2xl font-bold text-gray-900'>
+                  {stats.verified}
+                </p>
+              </div>
             </div>
-            <p className='text-xs text-muted-foreground'>Verified clinics</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* ✅ ENHANCED FILTERS AND SEARCH */}
+      {/* Search and Filters */}
       <Card>
         <CardHeader>
           <div className='flex items-center justify-between'>
-            <CardTitle className='text-lg flex items-center gap-2'>
-              <Filter className='h-5 w-5' />
-              Search & Filter
-            </CardTitle>
-            <div className='flex items-center gap-2'>
-              <span className='text-sm text-gray-600'>View:</span>
-              <div className='flex border border-gray-300 rounded-md'>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-3 py-1 text-sm ${
-                    viewMode === 'grid'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  Grid
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-3 py-1 text-sm ${
-                    viewMode === 'list'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  List
-                </button>
-              </div>
+            <CardTitle>Search & Filter</CardTitle>
+            <div className='flex items-center border rounded-lg'>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1 text-sm rounded-l-lg ${
+                  viewMode === 'grid'
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Grid className='h-4 w-4' />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1 text-sm rounded-r-lg ${
+                  viewMode === 'list'
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <List className='h-4 w-4' />
+              </button>
             </div>
           </div>
         </CardHeader>
@@ -355,6 +514,7 @@ export default function AdminClinicsPage() {
                 <SelectItem value='verified'>Verified</SelectItem>
                 <SelectItem value='pending'>Pending</SelectItem>
                 <SelectItem value='rejected'>Rejected</SelectItem>
+                <SelectItem value='archived'>Archived</SelectItem>
               </SelectContent>
             </Select>
             <Select value={stateFilter} onValueChange={setStateFilter}>
@@ -374,7 +534,17 @@ export default function AdminClinicsPage() {
         </CardContent>
       </Card>
 
-      {/* ✅ ENHANCED CLINICS DISPLAY */}
+      {/* Bulk Actions */}
+      {canDeleteClinics(user) && (
+        <BulkDeleteActions
+          selectedCount={selectedClinics.length}
+          onDelete={handleBulkDelete}
+          onSoftDelete={handleBulkSoftDelete}
+          isDeleting={isDeleting}
+        />
+      )}
+
+      {/* Clinics List */}
       <Card>
         <CardHeader>
           <div className='flex items-center justify-between'>
@@ -384,8 +554,8 @@ export default function AdminClinicsPage() {
                 <span className='text-sm text-gray-600'>
                   {selectedClinics.length} selected
                 </span>
-                <Button variant='outline' size='sm'>
-                  Bulk Actions
+                <Button variant='outline' size='sm' onClick={clearSelection}>
+                  Clear Selection
                 </Button>
               </div>
             )}
@@ -412,89 +582,63 @@ export default function AdminClinicsPage() {
                 </Button>
               )}
             </div>
-          ) : (
-            <>
-              {viewMode === 'grid' ? (
-                // ✅ USE ENHANCED CLINIC GRID
-                <EnhancedClinicGrid
-                  clinics={filteredClinics}
-                  loading={loading}
-                  viewMode='grid'
-                />
-              ) : (
-                // ✅ ENHANCED LIST VIEW
-                <div className='space-y-4'>
-                  {/* List Header */}
-                  <div className='hidden lg:grid lg:grid-cols-12 gap-4 py-3 px-4 bg-gray-50 rounded-lg font-medium text-sm text-gray-600'>
-                    <div className='col-span-1 flex items-center'>
-                      <input
-                        type='checkbox'
-                        checked={
-                          selectedClinics.length === filteredClinics.length &&
-                          filteredClinics.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        className='rounded border-gray-300'
-                      />
-                    </div>
-                    <div className='col-span-4'>Clinic Details</div>
-                    <div className='col-span-2'>Location</div>
-                    <div className='col-span-2'>Status</div>
-                    <div className='col-span-3 text-center'>Actions</div>
+          ) : viewMode === 'list' ? (
+            // List View
+            <div className='space-y-4'>
+              {/* List Header */}
+              <div className='hidden lg:grid lg:grid-cols-12 gap-4 py-3 px-4 bg-gray-50 rounded-lg font-medium text-sm text-gray-600'>
+                <div className='col-span-1 flex items-center'>
+                  <input
+                    type='checkbox'
+                    checked={
+                      selectedClinics.length === filteredClinics.length &&
+                      filteredClinics.length > 0
+                    }
+                    onChange={handleSelectAll}
+                    className='rounded border-gray-300'
+                  />
+                </div>
+                <div className='col-span-4'>Clinic Details</div>
+                <div className='col-span-2'>Location</div>
+                <div className='col-span-2'>Status</div>
+                <div className='col-span-3 text-center'>Actions</div>
+              </div>
+
+              {/* List Items */}
+              {filteredClinics.map((clinic) => (
+                <div
+                  key={clinic.id}
+                  className='grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors'
+                >
+                  {/* Selection Checkbox */}
+                  <div className='col-span-1 flex items-center'>
+                    <input
+                      type='checkbox'
+                      checked={selectedClinics.includes(clinic.id)}
+                      onChange={() => handleSelectClinic(clinic.id)}
+                      className='rounded border-gray-300'
+                    />
                   </div>
 
-                  {/* List Items */}
-                  {filteredClinics.map((clinic) => (
-                    <div
-                      key={clinic.id}
-                      className='grid grid-cols-1 lg:grid-cols-12 gap-4 py-4 px-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors items-center'
-                    >
-                      {/* Selection Checkbox */}
-                      <div className='hidden lg:block lg:col-span-1'>
-                        <input
-                          type='checkbox'
-                          checked={selectedClinics.includes(clinic.id)}
-                          onChange={() => handleSelectClinic(clinic.id)}
-                          className='rounded border-gray-300'
-                        />
-                      </div>
-
-                      {/* Clinic Details */}
-                      <div className='col-span-1 lg:col-span-4'>
-                        <div className='font-medium text-gray-900 mb-1'>
+                  {/* Clinic Details */}
+                  <div className='col-span-1 lg:col-span-4'>
+                    <div className='flex items-start gap-3'>
+                      <div className='flex-1'>
+                        <h3 className='font-semibold text-gray-900 mb-1'>
                           {clinic.name}
-                        </div>
-                        <div className='text-sm text-gray-600 space-y-1'>
+                        </h3>
+                        <p className='text-sm text-gray-600 mb-2'>
                           {clinic.phone && (
-                            <div className='flex items-center gap-1'>
-                              <span>📞 {clinic.phone}</span>
-                            </div>
+                            <span className='mr-3'>📞 {clinic.phone}</span>
                           )}
+                          {clinic.email && <span>✉️ {clinic.email}</span>}
+                        </p>
+                        <div className='flex flex-wrap gap-1'>
                           {clinic.emergency && (
-                            <div className='flex items-center gap-1'>
-                              <Shield size={12} className='text-red-500' />
-                              <span className='text-red-600 text-xs font-medium'>
-                                Emergency Services
-                              </span>
-                            </div>
+                            <Badge variant='destructive' className='text-xs'>
+                              Emergency
+                            </Badge>
                           )}
-                        </div>
-                      </div>
-
-                      {/* Location */}
-                      <div className='col-span-1 lg:col-span-2'>
-                        <div className='text-sm text-gray-900'>
-                          {clinic.city}
-                        </div>
-                        <div className='text-xs text-gray-600'>
-                          {clinic.state}
-                        </div>
-                      </div>
-
-                      {/* Status */}
-                      <div className='col-span-1 lg:col-span-2 space-y-1'>
-                        {getStatusBadge(clinic.verification_status)}
-                        <div className='text-xs'>
                           <Badge
                             variant={
                               isCurrentlyOpen(clinic.hours)
@@ -511,38 +655,182 @@ export default function AdminClinicsPage() {
                           </Badge>
                         </div>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Actions */}
-                      <div className='col-span-1 lg:col-span-3 flex gap-2 justify-start lg:justify-center'>
-                        <Button variant='ghost' size='sm' asChild>
-                          <Link href={`/admin/clinics/${clinic.id}`}>View</Link>
-                        </Button>
+                  {/* Location */}
+                  <div className='col-span-1 lg:col-span-2'>
+                    <p className='text-sm text-gray-900 font-medium'>
+                      {clinic.city}
+                    </p>
+                    <p className='text-sm text-gray-600'>{clinic.state}</p>
+                  </div>
+
+                  {/* Status */}
+                  <div className='col-span-1 lg:col-span-2'>
+                    {getStatusBadge(clinic.verification_status)}
+                  </div>
+
+                  {/* Actions */}
+                  <div className='col-span-1 lg:col-span-3 flex gap-2 justify-start lg:justify-center'>
+                    <Button variant='ghost' size='sm' asChild>
+                      <Link href={`/admin/clinics/${clinic.id}`}>
+                        <Eye className='h-4 w-4' />
+                      </Link>
+                    </Button>
+                    {canManageClinics(user) && (
+                      <Button variant='ghost' size='sm' asChild>
+                        <Link href={`/admin/clinics/${clinic.id}/edit`}>
+                          <Edit className='h-4 w-4' />
+                        </Link>
+                      </Button>
+                    )}
+                    {canDeleteClinics(user) && (
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='text-red-600 hover:text-red-800 hover:bg-red-50'
+                        onClick={() =>
+                          handleSingleDelete(clinic.id, clinic.name)
+                        }
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Grid View
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {filteredClinics.map((clinic) => (
+                <Card
+                  key={clinic.id}
+                  className='hover:shadow-md transition-shadow'
+                >
+                  <CardHeader className='pb-3'>
+                    <div className='flex items-start justify-between'>
+                      <div className='flex-1'>
+                        <CardTitle className='text-lg'>{clinic.name}</CardTitle>
+                        <p className='text-sm text-gray-600 mt-1'>
+                          {clinic.city}, {clinic.state}
+                        </p>
+                      </div>
+                      <input
+                        type='checkbox'
+                        checked={selectedClinics.includes(clinic.id)}
+                        onChange={() => handleSelectClinic(clinic.id)}
+                        className='rounded border-gray-300'
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent className='space-y-3'>
+                    <div className='flex flex-wrap gap-2'>
+                      {getStatusBadge(clinic.verification_status)}
+                      {clinic.emergency && (
+                        <Badge variant='destructive' className='text-xs'>
+                          Emergency
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={
+                          isCurrentlyOpen(clinic.hours)
+                            ? 'default'
+                            : 'secondary'
+                        }
+                        className={`text-xs ${
+                          isCurrentlyOpen(clinic.hours)
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {isCurrentlyOpen(clinic.hours) ? 'Open' : 'Closed'}
+                      </Badge>
+                    </div>
+
+                    <div className='flex justify-between pt-2'>
+                      <Button variant='outline' size='sm' asChild>
+                        <Link href={`/admin/clinics/${clinic.id}`}>
+                          <Eye className='h-4 w-4 mr-1' />
+                          View
+                        </Link>
+                      </Button>
+
+                      <div className='flex gap-1'>
                         {canManageClinics(user) && (
-                          <Button variant='ghost' size='sm' asChild>
+                          <Button variant='outline' size='sm' asChild>
                             <Link href={`/admin/clinics/${clinic.id}/edit`}>
-                              Edit
+                              <Edit className='h-4 w-4' />
                             </Link>
                           </Button>
                         )}
                         {canDeleteClinics(user) && (
                           <Button
-                            variant='ghost'
+                            variant='outline'
                             size='sm'
-                            className='text-red-600 hover:text-red-800'
-                            onClick={() => handleDelete(clinic.id, clinic.name)}
+                            className='text-red-600 hover:text-red-800 hover:bg-red-50'
+                            onClick={() =>
+                              handleSingleDelete(clinic.id, clinic.name)
+                            }
+                            disabled={isDeleting}
                           >
-                            Delete
+                            <Trash2 className='h-4 w-4' />
                           </Button>
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, type: 'single' })}
+        onConfirm={confirmDelete}
+        title={
+          deleteConfirmation.type === 'single'
+            ? 'Delete Clinic'
+            : deleteConfirmation.type === 'soft'
+            ? 'Archive Clinics'
+            : 'Delete Multiple Clinics'
+        }
+        message={
+          deleteConfirmation.type === 'single'
+            ? `Are you sure you want to delete "${deleteConfirmation.clinicName}"?`
+            : deleteConfirmation.type === 'soft'
+            ? `Are you sure you want to archive ${
+                selectedClinics.length
+              } clinic${selectedClinics.length > 1 ? 's' : ''}?`
+            : `Are you sure you want to delete ${
+                selectedClinics.length
+              } clinic${selectedClinics.length > 1 ? 's' : ''}?`
+        }
+        itemCount={
+          deleteConfirmation.type === 'single' ? 1 : selectedClinics.length
+        }
+        type={deleteConfirmation.type}
+        isLoading={isDeleting}
+      />
+
+      {/* Delete Progress Indicator */}
+      {deleteProgress && (
+        <DeleteProgressIndicator
+          current={deleteProgress.current}
+          total={deleteProgress.total}
+          message={
+            deleteConfirmation.type === 'soft'
+              ? 'Archiving clinics...'
+              : 'Deleting clinics...'
+          }
+        />
+      )}
     </div>
   );
 }
