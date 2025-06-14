@@ -35,7 +35,6 @@ import {
   formatAddress,
   formatAddressForMaps,
   formatPhone,
-  getTodayHours,
   getClinicStatus,
 } from '@/utils/formatters';
 import {
