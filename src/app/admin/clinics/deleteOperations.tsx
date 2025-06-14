@@ -13,13 +13,6 @@ import {
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { canDeleteClinics } from '@/utils/permissions';
-import { createClient } from '@supabase/supabase-js';
-
-// Create a service role client for super admins
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface DeleteProgress {
   current: number;
@@ -83,7 +76,7 @@ export const useDeleteOperations = (user: UserWithRole | null) => {
     }
   };
 
-  const deleteBulkClinics = async (clinicIds: string[], clinics: any[]) => {
+  const deleteBulkClinics = async (clinicIds: string[]) => {
     try {
       setIsDeleting(true);
       setDeleteProgress({ current: 0, total: clinicIds.length });
@@ -94,7 +87,7 @@ export const useDeleteOperations = (user: UserWithRole | null) => {
           .delete()
           .eq('id', clinicIds[i]);
         if (error) throw error;
-        setDeleteProgress((prev) => ({
+        setDeleteProgress((_prev) => ({
           current: i + 1,
           total: clinicIds.length,
         }));
@@ -206,7 +199,6 @@ export const DeleteConfirmationDialog = ({
   onConfirm,
   title,
   message,
-  itemCount,
   type,
   isLoading,
 }: {
@@ -215,7 +207,6 @@ export const DeleteConfirmationDialog = ({
   onConfirm: () => void;
   title: string;
   message: string;
-  itemCount: number;
   type: 'single' | 'bulk' | 'soft';
   isLoading: boolean;
 }) => {

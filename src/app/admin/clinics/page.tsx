@@ -225,17 +225,11 @@ export default function EnhancedAdminClinicsPage() {
   };
 
   const handleBulkDelete = () => {
-    const selectedClinicData = clinics.filter((c) =>
-      selectedClinics.includes(c.id)
-    );
     setDeleteConfirmation({
       isOpen: true,
       type: 'bulk',
       operation: async () => {
-        const result = await deleteBulkClinics(
-          selectedClinics,
-          selectedClinicData
-        );
+        const result = await deleteBulkClinics(selectedClinics);
         if (result.success) {
           clearSelection();
           await loadClinics();
@@ -811,9 +805,6 @@ export default function EnhancedAdminClinicsPage() {
             : `Are you sure you want to delete ${
                 selectedClinics.length
               } clinic${selectedClinics.length > 1 ? 's' : ''}?`
-        }
-        itemCount={
-          deleteConfirmation.type === 'single' ? 1 : selectedClinics.length
         }
         type={deleteConfirmation.type}
         isLoading={isDeleting}

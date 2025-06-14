@@ -530,7 +530,6 @@ export default function EnhancedAdminClinicDetailPage() {
               <CardContent>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   {Object.entries(clinic.hours).map(([day, hours]) => {
-                    const todayHours = getTodayHours(clinic.hours);
                     const isToday =
                       day.toLowerCase() ===
                       new Date()
@@ -811,7 +810,6 @@ export default function EnhancedAdminClinicDetailPage() {
           message={deleteConfirmation.action.confirmMessage}
           type={deleteConfirmation.action.type === 'soft' ? 'soft' : 'single'}
           isLoading={isDeleting}
-          itemCount={1}
         />
       )}
 
